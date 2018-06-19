@@ -95,15 +95,11 @@ namespace HttpDataServerProject8
                 if (auctionNumber != null && auctionNumber.Length == 19) // 44 фз
                 {
 
-                    XmlDocument d = ZakupkiGovRu.GetAuction44FzInf(auctionNumber);
-                    if (d != null)
+                    String html = ZakupkiGovRu.GetAuction44FzInf(auctionNumber);
+                    if (!String.IsNullOrWhiteSpace(html))
                     {
-                        XmlNode mainBox = d.SelectSingleNode("/html/body/div[@class='cardWrapper']/div[@class='wrapper']/div[@class='mainBox']");
-                        if (mainBox != null)
-                        {
-                            // сохраняем данные об аукционе
-                            auctionUid = Fz44.SaveAuctionInf(auctionNumber, mainBox);
-                        }
+                        // сохраняем данные об аукционе
+                        auctionUid = Fz44.SaveAuctionInf(html);
                     }
                     else { Log.Write(String.Format("Информация не загрузилась.")); }
                 }
@@ -114,10 +110,9 @@ namespace HttpDataServerProject8
     }
     class ZakupkiGovRu
     {
-        public static XmlDocument GetAuction44FzInf(String auctionNumber)
+        public static String GetAuction44FzInf(String auctionNumber)
         {
-            XmlDocument d = null;
-            List<AuctionInfBlock> aibs = null;
+            String html = null;
             if (!String.IsNullOrWhiteSpace(auctionNumber) && auctionNumber.Length == 19)
             {
                 UriBuilder ub = new UriBuilder
@@ -127,16 +122,9 @@ namespace HttpDataServerProject8
                     Path = "/epz/order/notice/ea44/view/common-info.html",
                     Query = String.Format("regNumber={0}", auctionNumber)
                 };
-                String receivedString = Utilities.GetResponse(ub.Uri);
-                if (!String.IsNullOrWhiteSpace(receivedString))
-                {
-                    String temp = NormXmlString(receivedString);
-                    aibs = GetAuctionInfBlockData(temp, Auction44FzInfBlockNames);
-                    d = new XmlDocument();
-                    d.LoadXml(temp);
-                }
+                html = Utilities.GetResponse(ub.Uri);
             }
-            return d;
+            return html;
         }
         private static String[] Auction44FzInfBlockNames = new String[]
         {
@@ -472,24 +460,35 @@ namespace HttpDataServerProject8
             };
             return aUid;
         }
-        public static Guid SaveAuctionInf(String manager, XmlNode mainBox)
+        public static Guid SaveAuctionInf(String html)
         {
             Guid aUid = new Guid();
+            //Regex regex;
+            //Match match;
 
             // берём основные блоки
 
             // заявка
-            XmlNode cardHeader = mainBox.SelectSingleNode("./div[@class='cardHeader']");
+            //regex = new Regex("<div[^>]*?class[^>]*?cardHeader.*?>", RegexOptions.Singleline);
+            //match = regex.Match(html);
+            //Int32 cardHeaderIndex = match.Index + match.Length;
 
             // общая_информация_о_закупке
-            XmlNode contentTabBoxBlock = mainBox.SelectSingleNode("./div[contains(@class, 'contentTabBoxBlock')]");
-            XmlNode noticeTabBox = contentTabBoxBlock.SelectSingleNode("./div[contains(@class, 'noticeTabBox')]");
+            //regex = new Regex("<div[^>]*?class[^>]*?contentTabBoxBlock.*?>", RegexOptions.Singleline);
+            //match = regex.Match(html);
+            //Int32 contentTabBoxBlockIndex = match.Index + match.Length;
+
+            //regex = new Regex("<div[^>]*?class[^>]*?noticeTabBox.*?>", RegexOptions.Singleline);
+            //match = regex.Match(html);
+            //Int32 noticeTabBoxIndex = match.Index + match.Length;
 
             // noticeTabBox содержит пары <h2 class="noticeBoxH2"> и <div class="noticeTabBoxWrapper"> с общей информацией для всех заказчиков
             // делаем из пар два параллельных списка
 
             // список <h2> с заголовками общей информации
-            XmlNodeList noticeBoxH2List = noticeTabBox.SelectNodes("./h2");
+            //List<Int32> noticeBoxH2Indexs = new List<Int32>();
+            //noticeTabBox.SelectNodes("./h2");
+            /*
             XmlNode[] noticeBoxH2s = new XmlNode[9];
             if (noticeBoxH2List != null)
             {
@@ -498,7 +497,9 @@ namespace HttpDataServerProject8
                     noticeBoxH2s[i] = noticeBoxH2List[i];
                 }
             }
-
+            */
+            ;
+            /*
             // список <div> с содержимым общей информации
             XmlNodeList noticeTabBoxWrapperList = noticeTabBox.SelectNodes("./div[contains(@class, 'noticeTabBoxWrapper')]");
             XmlNode[] noticeTabBoxWrappers = new XmlNode[9];
@@ -538,14 +539,247 @@ namespace HttpDataServerProject8
                     expandRows[size] = expandRowList[i];
                 }
             }
-
+            */
             // записываем на SQL сервер в базу Auctions общую информацию об аукционе
-            aUid = ParseAndSaveAuctionCommonInf(cardHeader, noticeBoxH2s, noticeTabBoxWrappers);
+            //aUid = ParseAndSaveAuctionCommonInf(cardHeader, noticeBoxH2s, noticeTabBoxWrappers);
+            aUid = ParseAndSaveAuctionCommonInf(html);
 
             // записываем на SQL сервер в базу Auctions информацию о заказчиках (их может быть несколько)
-            ParseAndSaveAuction44FzCustomerRequirement(manager, aUid, noticeTabBoxWrappers, noticeBoxExpands, expandRows);
+            //ParseAndSaveAuction44FzCustomerRequirement(aUid, noticeTabBoxWrappers, noticeBoxExpands, expandRows);
 
             return aUid;
+        }
+        private static Int32 GetIndexAfter(String src, String[] values, Int32 startIndex = 0)
+        {
+            bool isFound = false;
+            if (values != null && values.Length > 0)
+            {
+                while (!isFound && startIndex < src.Length)
+                {
+                    foreach (String value in values)
+                    {
+                        if (!String.IsNullOrEmpty(value))
+                        {
+                            Int32 index = src.IndexOf(value, startIndex);
+                            if (index >= 0)
+                            {
+                                isFound = true;
+                                startIndex = index + value.Length;
+                            }
+                            else
+                            {
+                                isFound = false;
+                                startIndex = src.Length;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return (isFound) ? startIndex : -1;
+        }
+        private static String GetValueByRegex(String src, String re, Int32 startAt = 0)
+        {
+            String value = null;
+            Regex regex = new Regex(re, RegexOptions.Singleline);
+            Match match = regex.Match(src, startAt);
+            if (match.Success && match.Groups.Count > 1)
+            {
+                value = match.Groups[1].Value.Trim();
+            }
+            return value;
+        }
+        private static Guid ParseAndSaveAuctionCommonInf(String html)
+        {
+            String r;
+            String v;
+            Int32 currentIndex;
+            SqlCommand cmd = new SqlCommand();
+
+            // берём основные блоки
+
+            // заявка
+            Int32 cardHeaderIndex = GetIndexAfter(html, new String[] { "<div", "cardHeader", ">" });
+            {
+                currentIndex = GetIndexAfter(html, new String[] { "<h1", ">", "Закупка", "№" }, cardHeaderIndex);
+                if (currentIndex >= 0)
+                {
+                    r = @"(\d*)";
+                    v = GetValueByRegex(html, r, currentIndex);
+                    if (v != null) cmd.Parameters.AddWithValue("номер", v);
+                }
+
+                currentIndex = GetIndexAfter(html, new String[] { "<div", "public", ">", "Размещено:" }, cardHeaderIndex);
+                if (currentIndex >= 0)
+                {
+                    r = @"(.*?)</div>";
+                    v = GetValueByRegex(html, r, currentIndex);
+                    if (v != null) cmd.Parameters.AddWithValue("дата_размещения", v);
+                }
+
+                currentIndex = GetIndexAfter(html, new String[] { "<div", "public", ">", "<span", "cooperative", ">" }, cardHeaderIndex);
+                if (currentIndex >= 0)
+                {
+                    cmd.Parameters.AddWithValue("кооператив", "1");
+                }
+            }
+            // общая_информация_о_закупке
+            Int32 contentTabBoxBlockIndex = GetIndexAfter(html, new String[] { "<div", "class", "contentTabBoxBlock", ">" }, cardHeaderIndex);
+            Int32 noticeTabBox = GetIndexAfter(html, new String[] { "<div", "class", "noticeTabBox", ">" }, contentTabBoxBlockIndex);
+            {
+                // noticeTabBox содержит пары <h2 class="noticeBoxH2"> и <div class="noticeTabBoxWrapper"> с общей информацией для всех заказчиков
+                // <h2> заголовк общей информации
+                // <div> содержимое общей информации
+
+                // общая_информация_о_закупке
+                Int32 t0Index = GetIndexAfter(html, new String[] { "<h2", ">", "Общая", "информация", "<div", ">", "<table", ">" }, noticeTabBox);
+                {
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Способ", "определения", "поставщика", "<td", ">" }, t0Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("способ_определения_поставщика", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Наименование", "электронной", "площадки", "<td", ">" }, t0Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("наименование_электронной_площадки_в_интернете", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Адрес", "электронной", "площадки", "<td", ">", "<a", ">" }, t0Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</a>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("адрес_электронной_площадки_в_интернете", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Размещение", "осуществляет", "<td", ">" }, t0Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("размещение_осуществляет", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Наименование", "объекта", "закупки", "<td", ">" }, t0Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("объект_закупки", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Этап", "закупки", "<td", ">" }, t0Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("этап_закупки", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Сведения", "о", "связи", "с", "позицией", "плана-графика", "<td", ">" }, t0Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("сведения_о_связи_с_позицией_плана_графика", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Номер", "типового", "контракта", "<td", ">" }, t0Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("номер_типового_контракта", v);
+                    }
+                }
+                // информация_об_организации_осуществляющей_определение_поставщика
+                Int32 t1Index = GetIndexAfter(html, new String[] { "<h2", ">", "Информация", "об", "организации", "осуществляющей", "определение", "поставщика", "<div", ">", "<table", ">" }, noticeTabBox);
+                {
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Организация", "осуществляющая", "размещение", "<td", ">" }, t1Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("организация_осуществляющая_размещение", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Почтовый", "адрес", "<td", ">" }, t1Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("почтовый_адрес", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Место", "нахождения", "<td", ">" }, t1Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("место_нахождения", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Ответственное", "должностное", "лицо", "<td", ">" }, t1Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("ответственное_должностное_лицо", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Адрес", "электронной", "почты", "<td", ">" }, t1Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("адрес_электронной_почты", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Номер", "контактного", "телефона", "<td", ">" }, t1Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("номер_контактного_телефона", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Факс", "<td", ">" }, t1Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("факс", v);
+                    }
+
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Дополнительная", "информация", "<td", ">" }, t1Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("дополнительная_информация", v);
+                    }
+
+                }
+                // информация_о_процедуре_закупки
+                Int32 t2Index = GetIndexAfter(html, new String[] { "<h2", ">", "Информация", "о", "процедуре", "закупки", "<div", ">", "<table", ">" }, noticeTabBox);
+                {
+                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Дата", "и", "время", "начала", "подачи", "заявок", "<td", ">" }, t2Index);
+                    if (currentIndex >= 0)
+                    {
+                        r = @"(.*?)</td>";
+                        v = GetValueByRegex(html, r, currentIndex);
+                        if (v != null) cmd.Parameters.AddWithValue("дата_и_время_начала_подачи_заявок", v);
+                    }
+
+                }
+            }
+            return new Guid();
         }
         private static Guid ParseAndSaveAuctionCommonInf(XmlNode cardHeader, XmlNode[] noticeBoxH2s, XmlNode[] noticeTabBoxWrappers)
         {
@@ -676,7 +910,7 @@ namespace HttpDataServerProject8
             }
             return aUid;
         }
-        private static void ParseAndSaveAuction44FzCustomerRequirement(String manager, Guid aUid, XmlNode[] noticeTabBoxWrappers, XmlNode[] noticeBoxExpands, XmlNode[] expandRows)
+        private static void ParseAndSaveAuction44FzCustomerRequirement(Guid aUid, XmlNode[] noticeTabBoxWrappers, XmlNode[] noticeBoxExpands, XmlNode[] expandRows)
         {
             // здесь может быть два варианта
             // первый - когда списки expand пусты - сохраняем из основного блока
@@ -703,7 +937,7 @@ namespace HttpDataServerProject8
                         new Object[] { "платежные_реквизиты_2",                         noticeTabBoxWrappers[8], "./table//tr[4]/td[2]" }
                     };
 
-                SaveAuctionCustomerRequirement(manager, aUid, mdCust);
+                SaveAuctionCustomerRequirement(aUid, mdCust);
             }
             else // второй вариант - со списком поставщиков
             {
@@ -726,11 +960,11 @@ namespace HttpDataServerProject8
                             new Object[] { "порядок_предоставления_обеспечения",            expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[3]/td[2]" },
                             new Object[] { "платежные_реквизиты_2",                         expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[4]/td[2]" }
                         };
-                    SaveAuctionCustomerRequirement(manager, aUid, mdCust);
+                    SaveAuctionCustomerRequirement(aUid, mdCust);
                 }
             }
         }
-        private static void SaveAuctionCustomerRequirement(String manager, Guid aUid, Object[][] mdCus)
+        private static void SaveAuctionCustomerRequirement(Guid aUid, Object[][] mdCus)
         {
             SqlCommand cmd = new SqlCommand
             {
@@ -836,6 +1070,7 @@ namespace HttpDataServerProject8
                     }
                 }
             }
+
             using (cmd.Connection)
             {
                 Object o = null;
@@ -843,6 +1078,7 @@ namespace HttpDataServerProject8
                 o = cmd.ExecuteScalar();
                 if (o != null && o.GetType() == typeof(Guid)) { aUid = (Guid)o; }
             }
+
             return aUid;
         }
     }
@@ -866,7 +1102,7 @@ namespace HttpDataServerProject8
         }
         public static String GetResponse(Uri uri)
         {
-            String result = null;
+            String html = null;
 
             Thread.Sleep(1000);
 
@@ -893,12 +1129,12 @@ namespace HttpDataServerProject8
                     Encoding encoding = Encoding.GetEncoding(response.CharacterSet);
                     using (StreamReader readStream = new StreamReader(receivedStream, encoding))
                     {
-                        result = readStream.ReadToEnd();
+                        html = readStream.ReadToEnd();
                     }
                 }
                 else { Log.Write(response.StatusDescription); }
             }
-            return result;
+            return html;
         }
     }
 }
