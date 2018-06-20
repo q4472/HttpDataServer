@@ -463,89 +463,12 @@ namespace HttpDataServerProject8
         public static Guid SaveAuctionInf(String html)
         {
             Guid aUid = new Guid();
-            //Regex regex;
-            //Match match;
 
-            // берём основные блоки
-
-            // заявка
-            //regex = new Regex("<div[^>]*?class[^>]*?cardHeader.*?>", RegexOptions.Singleline);
-            //match = regex.Match(html);
-            //Int32 cardHeaderIndex = match.Index + match.Length;
-
-            // общая_информация_о_закупке
-            //regex = new Regex("<div[^>]*?class[^>]*?contentTabBoxBlock.*?>", RegexOptions.Singleline);
-            //match = regex.Match(html);
-            //Int32 contentTabBoxBlockIndex = match.Index + match.Length;
-
-            //regex = new Regex("<div[^>]*?class[^>]*?noticeTabBox.*?>", RegexOptions.Singleline);
-            //match = regex.Match(html);
-            //Int32 noticeTabBoxIndex = match.Index + match.Length;
-
-            // noticeTabBox содержит пары <h2 class="noticeBoxH2"> и <div class="noticeTabBoxWrapper"> с общей информацией для всех заказчиков
-            // делаем из пар два параллельных списка
-
-            // список <h2> с заголовками общей информации
-            //List<Int32> noticeBoxH2Indexs = new List<Int32>();
-            //noticeTabBox.SelectNodes("./h2");
-            /*
-            XmlNode[] noticeBoxH2s = new XmlNode[9];
-            if (noticeBoxH2List != null)
-            {
-                for (int i = 0; i < Math.Min(9, noticeBoxH2List.Count); i++)
-                {
-                    noticeBoxH2s[i] = noticeBoxH2List[i];
-                }
-            }
-            */
-            ;
-            /*
-            // список <div> с содержимым общей информации
-            XmlNodeList noticeTabBoxWrapperList = noticeTabBox.SelectNodes("./div[contains(@class, 'noticeTabBoxWrapper')]");
-            XmlNode[] noticeTabBoxWrappers = new XmlNode[9];
-            if (noticeTabBoxWrapperList != null)
-            {
-                for (int i = 0; i < Math.Min(9, noticeTabBoxWrapperList.Count); i++)
-                {
-                    noticeTabBoxWrappers[i] = noticeTabBoxWrapperList[i];
-                }
-            }
-
-            // берём элементы с информацией о требованиях заказчиков
-            // их два параллельных списка
-
-            // первый список
-            XmlNodeList noticeBoxExpandList = noticeTabBox.SelectNodes("./div[contains(@class, 'noticeBoxExpand')]");
-            XmlNode[] noticeBoxExpands = new XmlNode[0];
-            if (noticeBoxExpandList != null)
-            {
-                for (int i = 0; i < noticeBoxExpandList.Count; i++)
-                {
-                    Int32 size = noticeBoxExpands.Length;
-                    Array.Resize<XmlNode>(ref noticeBoxExpands, size + 1);
-                    noticeBoxExpands[size] = noticeBoxExpandList[i];
-                }
-            }
-
-            // второй список
-            XmlNodeList expandRowList = noticeTabBox.SelectNodes("./div[contains(@class, 'expandRow')]");
-            XmlNode[] expandRows = new XmlNode[0];
-            if (expandRowList != null)
-            {
-                for (int i = 0; i < expandRowList.Count; i++)
-                {
-                    Int32 size = expandRows.Length;
-                    Array.Resize<XmlNode>(ref expandRows, size + 1);
-                    expandRows[size] = expandRowList[i];
-                }
-            }
-            */
-            // записываем на SQL сервер в базу Auctions общую информацию об аукционе
-            //aUid = ParseAndSaveAuctionCommonInf(cardHeader, noticeBoxH2s, noticeTabBoxWrappers);
-            aUid = ParseAndSaveAuctionCommonInf(html);
+            // записываем на SQL сервер в базу Auctions общую информацию о заявке
+            aUid = ParseAndSaveAuction44fzCommonInf(html);
 
             // записываем на SQL сервер в базу Auctions информацию о заказчиках (их может быть несколько)
-            //ParseAndSaveAuction44FzCustomerRequirement(aUid, noticeTabBoxWrappers, noticeBoxExpands, expandRows);
+            ParseAndSaveAuction44FzCustomerRequirement(aUid, html);
 
             return aUid;
         }
@@ -589,318 +512,100 @@ namespace HttpDataServerProject8
             }
             return value;
         }
-        private static Guid ParseAndSaveAuctionCommonInf(String html)
+        private static Guid ParseAndSaveAuction44fzCommonInf(String html)
         {
-            String r;
-            String v;
-            Int32 currentIndex;
-            SqlCommand cmd = new SqlCommand();
+            Guid aUid = new Guid();
 
             // берём основные блоки
 
+            // noticeTabBox содержит пары <h2 class="noticeBoxH2"> и <div class="noticeTabBoxWrapper"> с общей информацией для всех заказчиков
+            // <h2> заголовк общей информации
+            // <div> содержимое общей информации
+
             // заявка
-            Int32 cardHeaderIndex = GetIndexAfter(html, new String[] { "<div", "cardHeader", ">" });
-            {
-                currentIndex = GetIndexAfter(html, new String[] { "<h1", ">", "Закупка", "№" }, cardHeaderIndex);
-                if (currentIndex >= 0)
-                {
-                    r = @"(\d*)";
-                    v = GetValueByRegex(html, r, currentIndex);
-                    if (v != null) cmd.Parameters.AddWithValue("номер", v);
-                }
-
-                currentIndex = GetIndexAfter(html, new String[] { "<div", "public", ">", "Размещено:" }, cardHeaderIndex);
-                if (currentIndex >= 0)
-                {
-                    r = @"(.*?)</div>";
-                    v = GetValueByRegex(html, r, currentIndex);
-                    if (v != null) cmd.Parameters.AddWithValue("дата_размещения", v);
-                }
-
-                currentIndex = GetIndexAfter(html, new String[] { "<div", "public", ">", "<span", "cooperative", ">" }, cardHeaderIndex);
-                if (currentIndex >= 0)
-                {
-                    cmd.Parameters.AddWithValue("кооператив", "1");
-                }
-            }
+            Int32 h0 = GetIndexAfter(html, new String[] { "<div", "cardHeader", ">" });
             // общая_информация_о_закупке
-            Int32 contentTabBoxBlockIndex = GetIndexAfter(html, new String[] { "<div", "class", "contentTabBoxBlock", ">" }, cardHeaderIndex);
-            Int32 noticeTabBox = GetIndexAfter(html, new String[] { "<div", "class", "noticeTabBox", ">" }, contentTabBoxBlockIndex);
-            {
-                // noticeTabBox содержит пары <h2 class="noticeBoxH2"> и <div class="noticeTabBoxWrapper"> с общей информацией для всех заказчиков
-                // <h2> заголовк общей информации
-                // <div> содержимое общей информации
-
-                // общая_информация_о_закупке
-                Int32 t0Index = GetIndexAfter(html, new String[] { "<h2", ">", "Общая", "информация", "<div", ">", "<table", ">" }, noticeTabBox);
-                {
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Способ", "определения", "поставщика", "<td", ">" }, t0Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("способ_определения_поставщика", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Наименование", "электронной", "площадки", "<td", ">" }, t0Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("наименование_электронной_площадки_в_интернете", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Адрес", "электронной", "площадки", "<td", ">", "<a", ">" }, t0Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</a>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("адрес_электронной_площадки_в_интернете", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Размещение", "осуществляет", "<td", ">" }, t0Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("размещение_осуществляет", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Наименование", "объекта", "закупки", "<td", ">" }, t0Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("объект_закупки", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Этап", "закупки", "<td", ">" }, t0Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("этап_закупки", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Сведения", "о", "связи", "с", "позицией", "плана-графика", "<td", ">" }, t0Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("сведения_о_связи_с_позицией_плана_графика", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Номер", "типового", "контракта", "<td", ">" }, t0Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("номер_типового_контракта", v);
-                    }
-                }
-                // информация_об_организации_осуществляющей_определение_поставщика
-                Int32 t1Index = GetIndexAfter(html, new String[] { "<h2", ">", "Информация", "об", "организации", "осуществляющей", "определение", "поставщика", "<div", ">", "<table", ">" }, noticeTabBox);
-                {
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Организация", "осуществляющая", "размещение", "<td", ">" }, t1Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("организация_осуществляющая_размещение", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Почтовый", "адрес", "<td", ">" }, t1Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("почтовый_адрес", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Место", "нахождения", "<td", ">" }, t1Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("место_нахождения", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Ответственное", "должностное", "лицо", "<td", ">" }, t1Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("ответственное_должностное_лицо", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Адрес", "электронной", "почты", "<td", ">" }, t1Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("адрес_электронной_почты", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Номер", "контактного", "телефона", "<td", ">" }, t1Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("номер_контактного_телефона", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Факс", "<td", ">" }, t1Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("факс", v);
-                    }
-
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Дополнительная", "информация", "<td", ">" }, t1Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("дополнительная_информация", v);
-                    }
-
-                }
-                // информация_о_процедуре_закупки
-                Int32 t2Index = GetIndexAfter(html, new String[] { "<h2", ">", "Информация", "о", "процедуре", "закупки", "<div", ">", "<table", ">" }, noticeTabBox);
-                {
-                    currentIndex = GetIndexAfter(html, new String[] { "<tr", ">", "<td", ">", "Дата", "и", "время", "начала", "подачи", "заявок", "<td", ">" }, t2Index);
-                    if (currentIndex >= 0)
-                    {
-                        r = @"(.*?)</td>";
-                        v = GetValueByRegex(html, r, currentIndex);
-                        if (v != null) cmd.Parameters.AddWithValue("дата_и_время_начала_подачи_заявок", v);
-                    }
-
-                }
-            }
-            return new Guid();
-        }
-        private static Guid ParseAndSaveAuctionCommonInf(XmlNode cardHeader, XmlNode[] noticeBoxH2s, XmlNode[] noticeTabBoxWrappers)
-        {
-            // ищем таблицы информационных блоков по заголовку
-            XmlNode t0 = null; // общая_информация_о_закупке
-            XmlNode t1 = null; // информация_об_организации_осуществляющей_определение_поставщика
-            XmlNode t2 = null; // информация_о_процедуре_закупки
-            XmlNode t3 = null; // начальная_максимальная_цена_контракта
-            XmlNode t4 = null; // информация_об_объекте_закупки
-            XmlNode t5 = null; // преимущества_требования_к_участникам
-            for (int i = 0; i < noticeBoxH2s.Length; i++)
-            {
-                XmlNode n = noticeBoxH2s[i];
-                if (n != null)
-                {
-                    String h = n.InnerText.Trim();
-                    if (h.Length >= 17)
-                    {
-                        XmlNode d = noticeTabBoxWrappers[i];
-                        if (d != null)
-                        {
-                            XmlNode t = d.SelectSingleNode("./table");
-                            if (t != null)
-                            {
-                                switch (h.Substring(0, 17))
-                                {
-                                    case "Общая информация ": t0 = t; break;
-                                    case "Информация об орг": t1 = t; break;
-                                    case "Информация о проц": t2 = t; break;
-                                    case "Начальная (максим": t3 = t; break;
-                                    case "Информация об объ": t4 = t; break;
-                                    case "Преимущества, тре": t5 = t; break;
-                                    default: break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            Int32 contentTabBoxBlock = GetIndexAfter(html, new String[] { "<div", "class", "contentTabBoxBlock", ">" }, h0);
+            Int32 noticeTabBox = GetIndexAfter(html, new String[] { "<div", "class", "noticeTabBox", ">" }, contentTabBoxBlock);
+            // общая_информация_о_закупке
+            Int32 t0 = GetIndexAfter(html, new String[] { "<h2", ">", "Общая", "информация", "<div", ">", "<table", ">" }, noticeTabBox);
+            // информация_об_организации_осуществляющей_определение_поставщика
+            Int32 t1 = GetIndexAfter(html, new String[] { "<h2", ">", "Информация", "об", "организации", "<div", ">", "<table", ">" }, noticeTabBox);
+            // информация_о_процедуре_закупки
+            Int32 t2 = GetIndexAfter(html, new String[] { "<h2", ">", "Информация", "о", "процедуре", "<div", ">", "<table", ">" }, noticeTabBox);
+            // начальная_максимальная_цена_контракта
+            Int32 t3 = GetIndexAfter(html, new String[] { "<h2", ">", "Начальная", "(максимальная)", "<div", ">", "<table", ">" }, noticeTabBox);
+            // информация_об_объекте_закупки
+            Int32 t4 = GetIndexAfter(html, new String[] { "<h2", ">", "Информация", "об", "объекте", "<div", ">", "<table", ">" }, noticeTabBox);
+            // преимущества_требования_к_участникам
+            Int32 t5 = GetIndexAfter(html, new String[] { "<h2", ">", "Преимущества", "требования", "<div", ">", "<table", ">" }, noticeTabBox);
 
             Object[][] md44 = new Object[][] { 
-                    // закупка
-                    new Object[] { "номер",                                         cardHeader, "./h1" },
-                    new Object[] { "дата_размещения",                               cardHeader, "./div[@class='public']" },
-                    new Object[] { "кооператив",                                    cardHeader, "./div[@class='public']/span[@class='cooperative']" },
-                    // общая_информация_о_закупке
-                    new Object[] { "способ_определения_поставщика",                 t0, ".//tr[1]/td[2]" },
-                    new Object[] { "наименование_электронной_площадки_в_интернете", t0, ".//tr[2]/td[2]" },
-                    new Object[] { "адрес_электронной_площадки_в_интернете",        t0, ".//tr[3]/td[2]" },
-                    new Object[] { "размещение_осуществляет",                       t0, ".//tr[4]/td[2]" },
-                    new Object[] { "объект_закупки",                                t0, ".//tr[5]/td[2]" },
-                    new Object[] { "этап_закупки",                                  t0, ".//tr[6]/td[2]" },
-                    new Object[] { "сведения_о_связи_с_позицией_плана_графика",     t0, ".//tr[7]/td[2]" },
-                    new Object[] { "номер_типового_контракта",                      t0, ".//tr[8]/td[2]" },
-                    // информация_об_организации_осуществляющей_определение_поставщика
-                    new Object[] { "организация_осуществляющая_размещение",         t1, ".//tr[1]/td[2]" },
-                    new Object[] { "почтовый_адрес",                                t1, ".//tr[2]/td[2]" },
-                    new Object[] { "место_нахождения",                              t1, ".//tr[3]/td[2]" },
-                    new Object[] { "ответственное_должностное_лицо",                t1, ".//tr[4]/td[2]" },
-                    new Object[] { "адрес_электронной_почты",                       t1, ".//tr[5]/td[2]" },
-                    new Object[] { "номер_контактного_телефона",                    t1, ".//tr[6]/td[2]" },
-                    new Object[] { "факс",                                          t1, ".//tr[7]/td[2]" },
-                    new Object[] { "дополнительная_информация",                     t1, ".//tr[8]/td[2]" },
-                    // информация_о_процедуре_закупки
-                    new Object[] { "дата_и_время_начала_подачи_заявок",             t2, ".//tr[1]/td[2]" },
-                    new Object[] { "дата_и_время_окончания_подачи_заявок",          t2, ".//tr[2]/td[2]" },
-                    new Object[] { "место_подачи_заявок",                           t2, ".//tr[3]/td[2]" },
-                    new Object[] { "порядок_подачи_заявок",                         t2, ".//tr[4]/td[2]" },
-                    new Object[] { "дата_окончания_срока_рассмотрения_первых_частей", t2, ".//tr[5]/td[2]" },
-                    new Object[] { "дата_проведения_аукциона_в_электронной_форме",  t2, ".//tr[6]/td[2]" },
-                    new Object[] { "время_проведения_аукциона",                     t2, ".//tr[7]/td[2]" },
-                    new Object[] { "дополнительная_информация2",                    t2, ".//tr[8]/td[2]" },
-                    // начальная_максимальная_цена_контракта
-                    new Object[] { "начальная_максимальная_цена_контракта",         t3, ".//tr[1]/td[2]" },
-                    new Object[] { "валюта",                                        t3, ".//tr[2]/td[2]" },
-                    new Object[] { "источник_финансирования",                       t3, ".//tr[3]/td[2]" },
-                    new Object[] { "идентификационный_код_закупки",                 t3, ".//tr[4]/td[2]" },
-                    new Object[] { "оплата_исполнения_контракта_по_годам",          t3, "../div[contains(@class, 'addingTbl')]/table//tr[1]/td[2]" },
-                    // информация_об_объекте_закупки
-                    new Object[] { "условия_запреты_и_ограничения_допуска_товаров", t4, ".//tr[1]/td[2]" },
-                    new Object[] { "табличная_часть_в_формате_html",                t4, ".//tr[2]/td[1]" },
-                    // преимущества_требования_к_участникам
-                    new Object[] { "преимущества",                                  t5, ".//tr[1]/td[2]" },
-                    new Object[] { "требования",                                    t5, ".//tr[2]/td[2]" },
-                    new Object[] { "ограничения",                                   t5, ".//tr[3]/td[2]" }
-                };
+                // закупка
+                new Object[] { "номер",                                         h0, new String[] { "<h1", ">", "Закупка", "№" },                                                        @"(\d*)" },
+                new Object[] { "дата_размещения",                               h0, new String[] { "<div", "public", ">", "Размещено:" },                                               @"(.*?)</div>" },
+                new Object[] { "кооператив",                                    h0, new String[] { "<div", "public", ">", "<span", "cooperative", ">" },                                null, "1" },
+                // общая_информация_о_закупке
+                new Object[] { "способ_определения_поставщика",                 t0, new String[] { "<tr", ">", "<td", ">", "Способ", "определения", "поставщика", "<td", ">" },         @"(.*?)</td>" },
+                new Object[] { "наименование_электронной_площадки_в_интернете", t0, new String[] { "<tr", ">", "<td", ">", "Наименование", "электронной", "площадки", "<td", ">" },     @"(.*?)</td>" },
+                new Object[] { "адрес_электронной_площадки_в_интернете",        t0, new String[] { "<tr", ">", "<td", ">", "Адрес", "электронной", "площадки", "<td", ">", "<a", ">" }, @"(.*?)</a>" },
+                new Object[] { "размещение_осуществляет",                       t0, new String[] { "<tr", ">", "<td", ">", "Размещение", "осуществляет", "<td", ">" },                  @"(.*?)</td>" },
+                new Object[] { "объект_закупки",                                t0, new String[] { "<tr", ">", "<td", ">", "Наименование", "объекта", "закупки", "<td", ">" },          @"(.*?)</td>" },
+                new Object[] { "этап_закупки",                                  t0, new String[] { "<tr", ">", "<td", ">", "Этап", "закупки", "<td", ">" },                             @"(.*?)</td>" },
+                new Object[] { "сведения_о_связи_с_позицией_плана_графика",     t0, new String[] { "<tr", ">", "<td", ">", "Сведения", "о", "связи", "<td", ">" },                      @"(.*?)</td>" },
+                new Object[] { "номер_типового_контракта",                      t0, new String[] { "<tr", ">", "<td", ">", "Номер", "типового", "контракта", "<td", ">" },              @"(.*?)</td>" },
+                // информация_об_организации_осуществляющей_определение_поставщика
+                new Object[] { "организация_осуществляющая_размещение",         t1, new String[] { "<tr", ">", "<td", ">", "Организация", "осуществляющая", "размещение", "<td", ">" }, @"(.*?)</td>" },
+                new Object[] { "почтовый_адрес",                                t1, new String[] { "<tr", ">", "<td", ">", "Почтовый", "адрес", "<td", ">" },                           @"(.*?)</td>" },
+                new Object[] { "место_нахождения",                              t1, new String[] { "<tr", ">", "<td", ">", "Место", "нахождения", "<td", ">" },                         @"(.*?)</td>" },
+                new Object[] { "ответственное_должностное_лицо",                t1, new String[] { "<tr", ">", "<td", ">", "Ответственное", "должностное", "лицо", "<td", ">" },        @"(.*?)</td>" },
+                new Object[] { "адрес_электронной_почты",                       t1, new String[] { "<tr", ">", "<td", ">", "Адрес", "электронной", "почты", "<td", ">" },               @"(.*?)</td>" },
+                new Object[] { "номер_контактного_телефона",                    t1, new String[] { "<tr", ">", "<td", ">", "Номер", "контактного", "телефона", "<td", ">" },            @"(.*?)</td>" },
+                new Object[] { "факс",                                          t1, new String[] { "<tr", ">", "<td", ">", "Факс", "<td", ">" },                                        @"(.*?)</td>" },
+                new Object[] { "дополнительная_информация",                     t1, new String[] { "<tr", ">", "<td", ">", "Дополнительная", "информация", "<td", ">" },                @"(.*?)</td>" },
+                // информация_о_процедуре_закупки
+                new Object[] { "дата_и_время_начала_подачи_заявок",             t2, new String[] { "<tr", ">", "<td", ">", "Дата", "и", "время", "начала", "подачи", "<td", ">" },      @"(.*?)</td>" },
+                new Object[] { "дата_и_время_окончания_подачи_заявок",          t2, new String[] { "<tr", ">", "<td", ">", "Дата", "и", "время", "окончания", "подачи", "<td", ">" },   @"(.*?)</td>" },
+                new Object[] { "место_подачи_заявок",                           t2, new String[] { "<tr", ">", "<td", ">", "Место", "подачи", "заявок", "<td", ">" },                   @"(.*?)</td>" },
+                new Object[] { "порядок_подачи_заявок",                         t2, new String[] { "<tr", ">", "<td", ">", "Порядок", "подачи", "заявок", "<td", ">" },                 @"(.*?)</td>" },
+                new Object[] { "дата_окончания_срока_рассмотрения_первых_частей", t2, new String[] { "<tr", ">", "<td", ">", "Дата", "окончания", "срока", "<td", ">" },                @"(.*?)</td>" },
+                new Object[] { "дата_проведения_аукциона_в_электронной_форме",  t2, new String[] { "<tr", ">", "<td", ">", "Дата", "проведения", "<td", ">" },                          @"(.*?)</td>" },
+                new Object[] { "время_проведения_аукциона",                     t2, new String[] { "<tr", ">", "<td", ">", "Время", "проведения", "<td", ">" },                         @"(.*?)</td>" },
+                new Object[] { "дополнительная_информация2",                    t2, new String[] { "<tr", ">", "<td", ">", "Дополнительная", "информация", "<td", ">" },                @"(.*?)</td>" },
+                // начальная_максимальная_цена_контракта
+                new Object[] { "начальная_максимальная_цена_контракта",         t3, new String[] { "<tr", ">", "<td", ">", "Начальная", "максимальная", "цена", "<td", ">" },           @"(.*?)</td>" },
+                new Object[] { "валюта",                                        t3, new String[] { "<tr", ">", "<td", ">", "Валюта", "<td", ">" },                                      @"(.*?)</td>" },
+                new Object[] { "источник_финансирования",                       t3, new String[] { "<tr", ">", "<td", ">", "Источник", "финансирования", "<td", ">" },                  @"(.*?)</td>" },
+                new Object[] { "идентификационный_код_закупки",                 t3, new String[] { "<tr", ">", "<td", ">", "Идентификационный", "код", "закупки", "<td", ">" },         @"(.*?)</td>" },
+                new Object[] { "оплата_исполнения_контракта_по_годам",          t3, new String[] { "<tr", ">", "<td", ">", "Оплата", "исполнения", "контракта", "<td", ">" },           @"(.*?)</td>" }, // @"../div[contains(@class, 'addingTbl')]/table//tr[1]/td[2]"
+                // информация_об_объекте_закупки
+                new Object[] { "описание_объекта_закупки",                      t4, new String[] { "<tr", ">", "<td", ">", "Описание объекта закупки" },                                @"(.*?)</td>" },
+                new Object[] { "условия_запреты_и_ограничения_допуска_товаров", t4, new String[] { "<tr", ">", "<td", ">", "Условия", "запреты", "ограничения", "<td", ">" },           @"(.*?)</td>" },
+                new Object[] { "табличная_часть_в_формате_html",                t4, new String[] { "<tr", ">", "<td", ">", "Табличная", "часть", "html", "<td", ">" },                  @"(.*?)</td>" },
+                // преимущества_требования_к_участникам
+                new Object[] { "преимущества",                                  t5, new String[] { "<tr", ">", "<td", ">", "Преимущества", "<td", ">" },                                @"(.*?)</td>" },
+                new Object[] { "требования",                                    t5, new String[] { "<tr", ">", "<td", ">", "Требования", "<td", ">" },                                  @"(.*?)</td>" },
+                new Object[] { "ограничения",                                   t5, new String[] { "<tr", ">", "<td", ">", "Ограничения", "<td", ">" },                                 @"(.*?)</td>" }
+            };
 
-            Guid aUid = SaveAuctionCommonInf(md44);
-
-            return aUid;
-        }
-        private static Guid SaveAuctionCommonInf(Object[][] md44)
-        {
-            Guid aUid = new Guid();
             SqlCommand cmd = new SqlCommand
             {
                 Connection = new SqlConnection(Env.cnString),
                 CommandText = "[Auctions].[dbo].[save_auction_inf]",
                 CommandType = CommandType.StoredProcedure
             };
-            foreach (Object[] nx in md44)
+            foreach (Object[] p in md44)
             {
-                String name = (String)nx[0];
-                XmlNode node = (XmlNode)nx[1];
-                if (node != null)
+                Object v;
+                Int32 index = GetIndexAfter(html, (String[])p[2], (Int32)p[1]);
+                if (index >= 0)
                 {
-                    node = node.SelectSingleNode((String)nx[2]);
-                    if (node != null)
-                    {
-                        String value = Utilities.NormString(node.InnerText);
-                        if (name == "номер") value = (new Regex(@"\d{19}")).Match(value).Value;
-                        if (name == "кооператив") value = "1"; // иначе сюда вообще не дойдёт и value окажется равным 0 по умолчанию
-                        if (name == "дата_размещения") value = value.Replace("Размещено: ", String.Empty);
-                        if (!String.IsNullOrWhiteSpace(name))
-                        {
-                            if (name[0] != '@') { name = "@" + name; }
-                            cmd.Parameters.AddWithValue(name, value);
-                        }
-                    }
+                    if (p[3] is String r) v = GetValueByRegex(html, r, index); else v = p[4];
+                    if (v is String) v = Utilities.NormString(v as String);
+                    if (v != null) cmd.Parameters.AddWithValue((String)p[0], v);
                 }
             }
+            /*
             using (cmd.Connection)
             {
                 Object o = null;
@@ -908,60 +613,97 @@ namespace HttpDataServerProject8
                 o = cmd.ExecuteScalar();
                 if (o != null && o.GetType() == typeof(Guid)) { aUid = (Guid)o; }
             }
+            */
             return aUid;
         }
-        private static void ParseAndSaveAuction44FzCustomerRequirement(Guid aUid, XmlNode[] noticeTabBoxWrappers, XmlNode[] noticeBoxExpands, XmlNode[] expandRows)
+        private static void ParseAndSaveAuction44FzCustomerRequirement(Guid aUid, String html)
         {
             // здесь может быть два варианта
             // первый - когда списки expand пусты - сохраняем из основного блока
             // второй - сохраняем из списков
+            // кажется теперь только второй вариант 2018-06-20
 
-            Object[][] mdCust = null;
-            if (expandRows.Length == 0 || noticeBoxExpands.Length == 0)
+            // baseIndex
+            Int32 index = GetIndexAfter(html, new String[] { "Требования заказчиков" }); 
+            // дальше надо выделять пары которые содержат divs один с наименованием другой с информацией
+
+            Object[][]  mdCust = new Object[][] {
+                // требования_заказчика
+                new Object[] { "наименование_заказчика",                    index, ".//h3" },
+                // условия_контракта
+                new Object[] { "место_доставки_товара",                     index, "table//tr[1]/td[2]" },
+                new Object[] { "сроки_поставки_товара",                     index, "table//tr[2]/td[2]" },
+                new Object[] { "сведения_о_связи_с_позицией_плана_графика", index, ".//div[contains(@class, 'noticeTabBoxWrapper')][1]/table//tr[1]/td[2]" },
+                new Object[] { "оплата_исполнения_контракта_по_годам",      index, ".//div[contains(@class, 'noticeTabBoxWrapper')][2]/table//tr[1]/td[2]" },
+                // обеспечение_заявок
+                new Object[] { "размер_обеспечения",                        index, ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[2]/td[2]" },
+                new Object[] { "порядок_внесения_денежных_средств",         index, ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[3]/td[2]" },
+                new Object[] { "платежные_реквизиты",                       index, ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[4]/td[2]" },
+                // обеспечение_исполнения_контракта
+                new Object[] { "размер_обеспечения_2",                      index, ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[2]/td[2]" },
+                new Object[] { "порядок_предоставления_обеспечения",        index, ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[3]/td[2]" },
+                new Object[] { "платежные_реквизиты_2",                     index, ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[4]/td[2]" }
+            };
+
+            index = GetIndexAfter(html, new String[] { "Требование заказчика" }, index);
+            while (index >= 0)
             {
-                mdCust = new Object[][] {
-                        // требования_заказчика
-                        new Object[] { "наименование_заказчика",                        noticeTabBoxWrappers[1], "./table//tr[1]/td[2]" },
-                        // условия_контракта
-                        new Object[] { "место_доставки_товара",                         noticeTabBoxWrappers[6], "./table//tr[1]/td[2]" },
-                        new Object[] { "сроки_поставки_товара",                         noticeTabBoxWrappers[6], "./table//tr[2]/td[2]" },
-                        new Object[] { "сведения_о_связи_с_позицией_плана_графика",     noticeTabBoxWrappers[0], "./table//tr[7]/td[2]" },
-                        new Object[] { "оплата_исполнения_контракта_по_годам",          noticeTabBoxWrappers[3], "./div[contains(@class, 'addingTbl')]/table//tr[1]/td[2]" },
-                        // обеспечение_заявок
-                        new Object[] { "размер_обеспечения",                            noticeTabBoxWrappers[7], "./table//tr[2]/td[2]" },
-                        new Object[] { "порядок_внесения_денежных_средств",             noticeTabBoxWrappers[7], "./table//tr[3]/td[2]" },
-                        new Object[] { "платежные_реквизиты",                           noticeTabBoxWrappers[7], "./table//tr[4]/td[2]" },
-                        // обеспечение_исполнения_контракта
-                        new Object[] { "размер_обеспечения_2",                          noticeTabBoxWrappers[8], "./table//tr[2]/td[2]" },
-                        new Object[] { "порядок_предоставления_обеспечения",            noticeTabBoxWrappers[8], "./table//tr[3]/td[2]" },
-                        new Object[] { "платежные_реквизиты_2",                         noticeTabBoxWrappers[8], "./table//tr[4]/td[2]" }
-                    };
+                //Object 
 
-                SaveAuctionCustomerRequirement(aUid, mdCust);
             }
-            else // второй вариант - со списком поставщиков
+
+            //Object mdCst
+
             {
-                for (int i = 0; i < noticeBoxExpands.Length; i++)
+                /*
+                Object[][] mdCust = null;
+                if (expandRows.Length == 0 || noticeBoxExpands.Length == 0)
                 {
                     mdCust = new Object[][] {
                             // требования_заказчика
-                            new Object[] { "наименование_заказчика",                        noticeBoxExpands[i], ".//h3" },
+                            new Object[] { "наименование_заказчика",                        noticeTabBoxWrappers[1], "./table//tr[1]/td[2]" },
                             // условия_контракта
-                            //new Object[] { "место_доставки_товара",                         noticeTabBoxWrappers[6], "table//tr[1]/td[2]" },
-                            //new Object[] { "сроки_поставки_товара",                         noticeTabBoxWrappers[6], "table//tr[2]/td[2]" },
-                            new Object[] { "сведения_о_связи_с_позицией_плана_графика",     expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][1]/table//tr[1]/td[2]" },
-                            new Object[] { "оплата_исполнения_контракта_по_годам",          expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][2]/table//tr[1]/td[2]" },
+                            new Object[] { "место_доставки_товара",                         noticeTabBoxWrappers[6], "./table//tr[1]/td[2]" },
+                            new Object[] { "сроки_поставки_товара",                         noticeTabBoxWrappers[6], "./table//tr[2]/td[2]" },
+                            new Object[] { "сведения_о_связи_с_позицией_плана_графика",     noticeTabBoxWrappers[0], "./table//tr[7]/td[2]" },
+                            new Object[] { "оплата_исполнения_контракта_по_годам",          noticeTabBoxWrappers[3], "./div[contains(@class, 'addingTbl')]/table//tr[1]/td[2]" },
                             // обеспечение_заявок
-                            new Object[] { "размер_обеспечения",                            expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[2]/td[2]" },
-                            new Object[] { "порядок_внесения_денежных_средств",             expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[3]/td[2]" },
-                            new Object[] { "платежные_реквизиты",                           expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[4]/td[2]" },
+                            new Object[] { "размер_обеспечения",                            noticeTabBoxWrappers[7], "./table//tr[2]/td[2]" },
+                            new Object[] { "порядок_внесения_денежных_средств",             noticeTabBoxWrappers[7], "./table//tr[3]/td[2]" },
+                            new Object[] { "платежные_реквизиты",                           noticeTabBoxWrappers[7], "./table//tr[4]/td[2]" },
                             // обеспечение_исполнения_контракта
-                            new Object[] { "размер_обеспечения_2",                          expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[2]/td[2]" },
-                            new Object[] { "порядок_предоставления_обеспечения",            expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[3]/td[2]" },
-                            new Object[] { "платежные_реквизиты_2",                         expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[4]/td[2]" }
+                            new Object[] { "размер_обеспечения_2",                          noticeTabBoxWrappers[8], "./table//tr[2]/td[2]" },
+                            new Object[] { "порядок_предоставления_обеспечения",            noticeTabBoxWrappers[8], "./table//tr[3]/td[2]" },
+                            new Object[] { "платежные_реквизиты_2",                         noticeTabBoxWrappers[8], "./table//tr[4]/td[2]" }
                         };
+
                     SaveAuctionCustomerRequirement(aUid, mdCust);
                 }
+                else // второй вариант - со списком поставщиков
+                {
+                    for (int i = 0; i < noticeBoxExpands.Length; i++)
+                    {
+                        mdCust = new Object[][] {
+                                // требования_заказчика
+                                new Object[] { "наименование_заказчика",                        noticeBoxExpands[i], ".//h3" },
+                                // условия_контракта
+                                //new Object[] { "место_доставки_товара",                         noticeTabBoxWrappers[6], "table//tr[1]/td[2]" },
+                                //new Object[] { "сроки_поставки_товара",                         noticeTabBoxWrappers[6], "table//tr[2]/td[2]" },
+                                new Object[] { "сведения_о_связи_с_позицией_плана_графика",     expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][1]/table//tr[1]/td[2]" },
+                                new Object[] { "оплата_исполнения_контракта_по_годам",          expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][2]/table//tr[1]/td[2]" },
+                                // обеспечение_заявок
+                                new Object[] { "размер_обеспечения",                            expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[2]/td[2]" },
+                                new Object[] { "порядок_внесения_денежных_средств",             expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[3]/td[2]" },
+                                new Object[] { "платежные_реквизиты",                           expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[4]/td[2]" },
+                                // обеспечение_исполнения_контракта
+                                new Object[] { "размер_обеспечения_2",                          expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[2]/td[2]" },
+                                new Object[] { "порядок_предоставления_обеспечения",            expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[3]/td[2]" },
+                                new Object[] { "платежные_реквизиты_2",                         expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[4]/td[2]" }
+                            };
+                        SaveAuctionCustomerRequirement(aUid, mdCust);
+                    }
+                }
+                */
             }
         }
         private static void SaveAuctionCustomerRequirement(Guid aUid, Object[][] mdCus)
