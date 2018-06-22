@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
-using System.Xml;
 
 namespace HttpDataServerProject8
 {
@@ -80,29 +79,23 @@ namespace HttpDataServerProject8
             Guid? auctionUid = null;
             try
             {
-                if (auctionNumber != null && auctionNumber.Length == 11) // 223 фз
+                if (!String.IsNullOrWhiteSpace(auctionNumber) && (auctionNumber.Length == 11 || auctionNumber.Length == 19))
                 {
-                    // получаем 6 блоков Auction223FzInfBlockNames в виде xml документов с html разметкой <div... </div>
-                    List<AuctionInfBlock> aibs = ZakupkiGovRu.GetAuction223FzInf(auctionNumber);
-                    if (aibs != null)
-                    {
-                        if (aibs.Count < 6) { Log.Write(String.Format("Информация загрузилась не полностью. Всего блоков: {0}.", aibs.Count)); }
-                        // сохраняем данные об аукционе
-                        auctionUid = Fz223.SaveAuctionInf(aibs);
-                    }
-                    else { Log.Write(String.Format("Информация не загрузилась.")); }
-                }
-                if (auctionNumber != null && auctionNumber.Length == 19) // 44 фз
-                {
-
-                    String html = ZakupkiGovRu.GetAuction44FzInf(auctionNumber);
+                    String html = ZakupkiGovRu.GetAuctionInf(auctionNumber);
                     if (!String.IsNullOrWhiteSpace(html))
                     {
-                        // сохраняем данные об аукционе
-                        auctionUid = Fz44.SaveAuctionInf(html);
+                        if (auctionNumber.Length == 11) // 223 фз
+                        {
+                            auctionUid = Fz223.SaveAuctionInf(html);
+                        }
+                        if (auctionNumber.Length == 19) // 44 фз
+                        {
+                            auctionUid = Fz44.SaveAuctionInf(html);
+                        }
                     }
-                    else { Log.Write(String.Format("Информация не загрузилась.")); }
+                    else { Log.Write(String.Format($"Информация о заявке '{auctionNumber}' не загрузилась.")); }
                 }
+                else { Log.Write(String.Format($"Не указан номер заявки.")); }
             }
             catch (Exception e) { Log.Write(String.Format(e.Message)); }
             return auctionUid;
@@ -110,7 +103,7 @@ namespace HttpDataServerProject8
     }
     class ZakupkiGovRu
     {
-        public static String GetAuction44FzInf(String auctionNumber)
+        public static String GetAuctionInf(String auctionNumber)
         {
             String html = null;
             if (!String.IsNullOrWhiteSpace(auctionNumber) && auctionNumber.Length == 19)
@@ -124,44 +117,6 @@ namespace HttpDataServerProject8
                 };
                 html = Utilities.GetResponse(ub.Uri);
             }
-            return html;
-        }
-        private static String[] Auction44FzInfBlockNames = new String[]
-        {
-            "Общая информация о закупке",
-            "Информация об организации, осуществляющей определение поставщика (подрядчика, исполнителя)",
-            "Информация о процедуре закупки",
-            "Начальная (максимальная) цена контракта",
-            "Информация об объекте закупки",
-            "Преимущества, требования к участникам",
-
-            "Требования заказчика", // этот блок появляется несколько раз по числу заказчиков (кооператив)
-                                    // он содержит вложенные блоки описанные в Customer44FzInfBlockNames
-                                    // порядок важен так как "Обеспечение заявок" входит в Customer44FzInfBlockNames
-
-            "Условия контракта", // этот блок есть только если заказчик один (не кооператив)
-            "Обеспечение заявок", // этот блок есть только если заказчик один (не кооператив)
-            "Обеспечение исполнения контракта" // этот блок есть только если заказчик один (не кооператив)
-        };
-        private static String[] Customer44FzInfBlockNames = new String[]
-        {
-            "Сведения о связи с позицией плана-графика",
-            "Начальная (максимальная) цена контракта",
-            "Обеспечение заявок",
-            "Обеспечение исполнения контракта"
-        };
-        private static String[] Auction223FzInfBlockNames = new String[]
-        {
-            "Общие сведения о закупке",
-            "Заказчик",
-            "Контактное лицо",
-            "Требования к участникам закупки",
-            "Порядок размещения закупки",
-            "Предоставление документации"
-        };
-        public static List<AuctionInfBlock> GetAuction223FzInf(String auctionNumber)
-        {
-            List<AuctionInfBlock> aibs = null;
             if (!String.IsNullOrWhiteSpace(auctionNumber) && auctionNumber.Length == 11)
             {
                 UriBuilder ub = new UriBuilder
@@ -171,63 +126,9 @@ namespace HttpDataServerProject8
                     Path = "/223/purchase/public/purchase/info/common-info.html",
                     Query = String.Format("regNumber={0}", auctionNumber)
                 };
-                String receivedString = Utilities.GetResponse(ub.Uri);
-                if (!String.IsNullOrWhiteSpace(receivedString))
-                {
-                    String temp = NormXmlString(receivedString);
-                    aibs = GetAuctionInfBlockData(temp, Auction223FzInfBlockNames);
-                }
+                html = Utilities.GetResponse(ub.Uri);
             }
-            return aibs;
-        }
-        private static List<AuctionInfBlock> GetAuctionInfBlockData(String inputString, String[] blockNames)
-        {
-            List<AuctionInfBlock> aibs = new List<AuctionInfBlock>();
-            Int32 inputStringCurrentIndex = 0;
-            foreach (String blockName in blockNames)
-            {
-                while (true)
-                {
-                    XmlDocument d = null;
-                    Int32 blockStartIndex = inputString.IndexOf(String.Format("{0}", blockName), inputStringCurrentIndex);
-                    if (blockStartIndex >= 0)
-                    {
-                        // очередной блок найден
-                        inputStringCurrentIndex = blockStartIndex + blockName.Length;
-                        Int32 divStartIndex = GetHtmlDivStartIndex(inputString, blockStartIndex);
-                        if (divStartIndex >= 0)
-                        {
-                            inputStringCurrentIndex = divStartIndex + 1;
-                            Int32 divFinishIndex = GetHtmlDivFinishIndex(inputString, divStartIndex);
-                            if (divFinishIndex >= 0)
-                            {
-                                inputStringCurrentIndex = divFinishIndex;
-                                String htmlDiv = inputString.Substring(divStartIndex, divFinishIndex - divStartIndex);
-                                d = new XmlDocument();
-                                try
-                                {
-                                    d.LoadXml(htmlDiv);
-                                }
-                                catch (Exception e) { d = null; Log.Write(String.Format(e.Message)); }
-                            }
-                        }
-                        aibs.Add(new AuctionInfBlock { Name = blockName, Data = d });
-
-                    }
-                    else { break; }
-                    if (blockName != "Требования заказчика") { break; }
-                }
-            }
-            return aibs;
-        }
-        private static Int32 GetHtmlDivStartIndex(String inputString, Int32 searchStartIndex)
-        {
-            Int32 divStartIndex = -1;
-            if (!String.IsNullOrWhiteSpace(inputString) && inputString.Length > searchStartIndex)
-            {
-                divStartIndex = inputString.IndexOf("<div", searchStartIndex);
-            }
-            return divStartIndex;
+            return html;
         }
         private static Int32 GetHtmlDivFinishIndex(String inputString, Int32 htmlDivStartIndex)
         {
@@ -260,28 +161,6 @@ namespace HttpDataServerProject8
                 }
             }
             return htmlDivFinishIndex;
-        }
-        private static String NormXmlString(String s)
-        {
-            String temp = (new Regex(@"(?s)<script[^>]*>.*?<\/script>")).Replace(s, " ");
-            temp = (new Regex(@"(?s)<style[^>]*>.*?<\/style>")).Replace(temp, " ");
-            temp = (new Regex(@"(?s)<link[^>]*>")).Replace(temp, "");
-            temp = (new Regex(@"(?s)<br[^>]*>")).Replace(temp, "");
-            temp = (new Regex(@"(?s)<tr>\s*?<td colspan=""6"" class=""delimTr""></td>\s*?<tr>")).Replace(temp, @"<tr><td colspan=""6"" class=""delimTr""></td></tr>");
-            temp = temp.Replace("&", "&amp;");
-            temp = temp.Replace("<div class=\"td-overflow\">", " ");
-            temp = temp.Replace(" class>", ">");
-            temp = temp.Replace("\t", " ").Replace("\n", " ").Replace("\r", " ");
-            temp = temp.Replace("&nbsp;", " ");
-            while (temp.Contains("  ")) temp = temp.Replace("  ", " ");
-            temp = temp.Replace("Общая информация</span></div> </td>", "Общая информация</span> </td>");
-            temp = temp.Replace("Документы</span></div> </td>", "Документы</span> </td>");
-            temp = temp.Replace("Журнал событий</span></div> </td>", "Журнал событий</span> </td>");
-            temp = temp.Replace("</span ", "</span>");
-            temp = temp.Replace("\"\">", "\">");
-            temp = temp.Replace("=\">", "=\"\">");
-            temp = temp.Replace("Результаты определения поставщика</span></div>", "Результаты определения поставщика</span>");
-            return temp;
         }
         private static String BuildQueryStringForRegion(String regionNumber, String publishDate, String searchString, Regex re, Int32 recordsPerPage = 50, Int32 pageNumber = 1)
         {
@@ -400,66 +279,8 @@ namespace HttpDataServerProject8
             return recordCount;
         }
     }
-    class AuctionInfBlock
-    {
-        public String Name;
-        public XmlDocument Data;
-    }
     class Fz44
     {
-        public static Guid SaveAuctionInf(List<AuctionInfBlock> aibs)
-        {
-            Guid aUid = new Guid();
-            Object[][] md44 = new Object[][] {
-                // закупка
-                new Object[] { "номер", "Общая информация о закупке", "Способ определения поставщика" },
-                    /*
-                    new Object[] { "дата_размещения",                               cardHeader, "./div[@class='public']" },
-                    new Object[] { "кооператив",                                    cardHeader, "./div[@class='public']/span[@class='cooperative']" },
-                    // общая_информация_о_закупке
-                    new Object[] { "способ_определения_поставщика",                 t0, ".//tr[1]/td[2]" },
-                    new Object[] { "наименование_электронной_площадки_в_интернете", t0, ".//tr[2]/td[2]" },
-                    new Object[] { "адрес_электронной_площадки_в_интернете",        t0, ".//tr[3]/td[2]" },
-                    new Object[] { "размещение_осуществляет",                       t0, ".//tr[4]/td[2]" },
-                    new Object[] { "объект_закупки",                                t0, ".//tr[5]/td[2]" },
-                    new Object[] { "этап_закупки",                                  t0, ".//tr[6]/td[2]" },
-                    new Object[] { "сведения_о_связи_с_позицией_плана_графика",     t0, ".//tr[7]/td[2]" },
-                    new Object[] { "номер_типового_контракта",                      t0, ".//tr[8]/td[2]" },
-                    // информация_об_организации_осуществляющей_определение_поставщика
-                    new Object[] { "организация_осуществляющая_размещение",         t1, ".//tr[1]/td[2]" },
-                    new Object[] { "почтовый_адрес",                                t1, ".//tr[2]/td[2]" },
-                    new Object[] { "место_нахождения",                              t1, ".//tr[3]/td[2]" },
-                    new Object[] { "ответственное_должностное_лицо",                t1, ".//tr[4]/td[2]" },
-                    new Object[] { "адрес_электронной_почты",                       t1, ".//tr[5]/td[2]" },
-                    new Object[] { "номер_контактного_телефона",                    t1, ".//tr[6]/td[2]" },
-                    new Object[] { "факс",                                          t1, ".//tr[7]/td[2]" },
-                    new Object[] { "дополнительная_информация",                     t1, ".//tr[8]/td[2]" },
-                    // информация_о_процедуре_закупки
-                    new Object[] { "дата_и_время_начала_подачи_заявок",             t2, ".//tr[1]/td[2]" },
-                    new Object[] { "дата_и_время_окончания_подачи_заявок",          t2, ".//tr[2]/td[2]" },
-                    new Object[] { "место_подачи_заявок",                           t2, ".//tr[3]/td[2]" },
-                    new Object[] { "порядок_подачи_заявок",                         t2, ".//tr[4]/td[2]" },
-                    new Object[] { "дата_окончания_срока_рассмотрения_первых_частей", t2, ".//tr[5]/td[2]" },
-                    new Object[] { "дата_проведения_аукциона_в_электронной_форме",  t2, ".//tr[6]/td[2]" },
-                    new Object[] { "время_проведения_аукциона",                     t2, ".//tr[7]/td[2]" },
-                    new Object[] { "дополнительная_информация2",                    t2, ".//tr[8]/td[2]" },
-                    // начальная_максимальная_цена_контракта
-                    new Object[] { "начальная_максимальная_цена_контракта",         t3, ".//tr[1]/td[2]" },
-                    new Object[] { "валюта",                                        t3, ".//tr[2]/td[2]" },
-                    new Object[] { "источник_финансирования",                       t3, ".//tr[3]/td[2]" },
-                    new Object[] { "идентификационный_код_закупки",                 t3, ".//tr[4]/td[2]" },
-                    new Object[] { "оплата_исполнения_контракта_по_годам",          t3, "../div[contains(@class, 'addingTbl')]/table//tr[1]/td[2]" },
-                    // информация_об_объекте_закупки
-                    new Object[] { "условия_запреты_и_ограничения_допуска_товаров", t4, ".//tr[1]/td[2]" },
-                    new Object[] { "табличная_часть_в_формате_html",                t4, ".//tr[2]/td[1]" },
-                    // преимущества_требования_к_участникам
-                    new Object[] { "преимущества",                                  t5, ".//tr[1]/td[2]" },
-                    new Object[] { "требования",                                    t5, ".//tr[2]/td[2]" },
-                    new Object[] { "ограничения",                                   t5, ".//tr[3]/td[2]" }
-                    */
-            };
-            return aUid;
-        }
         public static Guid SaveAuctionInf(String html)
         {
             Guid aUid = new Guid();
@@ -471,17 +292,6 @@ namespace HttpDataServerProject8
             ParseAndSaveAuction44FzCustomerRequirement(aUid, html);
 
             return aUid;
-        }
-        private static String GetValueByRegex(String src, String re, Int32 startAt = 0)
-        {
-            String value = null;
-            Regex regex = new Regex(re, RegexOptions.Singleline);
-            Match match = regex.Match(src, startAt);
-            if (match.Success && match.Groups.Count > 1)
-            {
-                value = match.Groups[1].Value.Trim();
-            }
-            return value;
         }
         private static Guid ParseAndSaveAuction44fzCommonInf(String html)
         {
@@ -525,7 +335,7 @@ namespace HttpDataServerProject8
                 new Object[] { "сведения_о_связи_с_позицией_плана_графика",     t0, new String[] { "Сведения о связи", "<td", ">" },                        @"(.*?)</td>" },
                 new Object[] { "номер_типового_контракта",                      t0, new String[] { "Номер типового контракта", "<td", ">" },                @"(.*?)</td>" },
                 // информация_об_организации_осуществляющей_определение_поставщика
-                new Object[] { "организация_осуществляющая_размещение",         t1, new String[] { "Организация осуществляющая размещение", "<td", ">" },   @"(.*?)</td>" },
+                new Object[] { "организация_осуществляющая_размещение",         t1, new String[] { "Организация, осуществляющая размещение", "<td", ">" },  @"(.*?)</td>" },
                 new Object[] { "почтовый_адрес",                                t1, new String[] { "Почтовый адрес", "<td", ">" },                          @"(.*?)</td>" },
                 new Object[] { "место_нахождения",                              t1, new String[] { "Место нахождения", "<td", ">" },                        @"(.*?)</td>" },
                 new Object[] { "ответственное_должностное_лицо",                t1, new String[] { "Ответственное должностное лицо", "<td", ">" },          @"(.*?)</td>" },
@@ -570,7 +380,7 @@ namespace HttpDataServerProject8
                 Int32 index = new SectionIndexes(html, (String[])p[2], (Int32)p[1]).Index1;
                 if (index >= 0)
                 {
-                    if (p[3] is String r) v = GetValueByRegex(html, r, index); else v = p[4];
+                    if (p[3] is String r) v = Utilities.GetValueByRegex(html, r, index); else v = p[4];
                     if (v is String) v = Utilities.NormString(v as String);
                     if (v != null) cmd.Parameters.AddWithValue((String)p[0], v);
                 }
@@ -589,30 +399,32 @@ namespace HttpDataServerProject8
             // здесь может быть два варианта
             // первый - когда списки expand пусты - сохраняем из основного блока
             // второй - сохраняем из списков
+            // кажется теперь только второй вариант 2018-06-20
 
             // второй вариант
             // baseIndex
-            Int32 bi = new SectionIndexes(html, new String[] { "Требования заказчиков" }).Index1;
 
             Object[][] mdCust = new Object[][] {
                 // требования_заказчика
-                new Object[] { "наименование_заказчика",                    bi, new String[] { "<h3>Требования заказчика&nbsp;" },  "(.*?)</h3>" },
+                new Object[] { "наименование_заказчика",                    0, new String[] { "&nbsp;" },  "(.*?)</h3>" },
                 // условия_контракта
-                new Object[] { "место_доставки_товара",                     bi, new String[] { "Место доставки", "<td", ">" },      "(.*?)</td>" },
-                new Object[] { "сроки_поставки_товара",                     bi, new String[] { "Сроки поставки", "<td", ">" },      "(.*?)</td>" },
-                new Object[] { "сведения_о_связи_с_позицией_плана_графика", bi, new String[] { "Сведения о связи", "Сведения о связи", "<td", ">" },    "(.*?)</td>" },
-                new Object[] { "оплата_исполнения_контракта_по_годам",      bi, new String[] { "Оплата исполнения", "<td", ">" },   "(.*?)</td>" },
+                new Object[] { "место_доставки_товара",                     0, new String[] { "Место доставки", "<td", ">" },                       "(.*?)</td>" },
+                new Object[] { "сроки_поставки_товара",                     0, new String[] { "Сроки поставки", "<td", ">" },                       "(.*?)</td>" },
+                new Object[] { "сведения_о_связи_с_позицией_плана_графика", 0, new String[] { "Сведения о связи", "Сведения о связи", "<td", ">" }, "(.*?)</td>" },
+                new Object[] { "оплата_исполнения_контракта_по_годам",      0, new String[] { "Оплата исполнения", "<td", ">" },                    "(.*?)</td>" },
                 // обеспечение_заявок
-                new Object[] { "размер_обеспечения",                        bi, new String[] { "Обеспечение заявок", "Размер обеспечения", "<td", ">" },    "(.*?)</td>" },
-                new Object[] { "порядок_внесения_денежных_средств",         bi, new String[] { "Обеспечение заявок", "Порядок внесения", "<td", ">" },      "(.*?)</td>" },
-                new Object[] { "платежные_реквизиты",                       bi, new String[] { "Обеспечение заявок", "Платежные реквизиты", "<td", ">" },   "(.*?)</td>" },
+                new Object[] { "размер_обеспечения",                        0, new String[] { "Обеспечение заявок", "Размер обеспечения", "<td", ">" },  "(.*?)</td>" },
+                new Object[] { "порядок_внесения_денежных_средств",         0, new String[] { "Обеспечение заявок", "Порядок внесения", "<td", ">" },    "(.*?)</td>" },
+                new Object[] { "платежные_реквизиты",                       0, new String[] { "Обеспечение заявок", "Платежные реквизиты", "<td", ">" }, "(.*?)</td>" },
                 // обеспечение_исполнения_контракта
-                new Object[] { "размер_обеспечения_2",                      bi, new String[] { "Обеспечение исполнения", "Размер обеспечения", "<td", ">" },        "(.*?)</td>" },
-                new Object[] { "порядок_предоставления_обеспечения",        bi, new String[] { "Обеспечение исполнения", "Порядок предоставления", "<td", ">" },    "(.*?)</td>" },
-                new Object[] { "платежные_реквизиты_2",                     bi, new String[] { "Обеспечение исполнения", "Платежные реквизиты", "<td", ">" },       "(.*?)</td>" },
+                new Object[] { "размер_обеспечения_2",                      0, new String[] { "Обеспечение исполнения", "Размер обеспечения", "<td", ">" },     "(.*?)</td>" },
+                new Object[] { "порядок_предоставления_обеспечения",        0, new String[] { "Обеспечение исполнения", "Порядок предоставления", "<td", ">" }, "(.*?)</td>" },
+                new Object[] { "платежные_реквизиты_2",                     0, new String[] { "Обеспечение исполнения", "Платежные реквизиты", "<td", ">" },    "(.*?)</td>" },
             };
 
-            bi = new SectionIndexes(html, new String[] { "<h3>Требования заказчика&nbsp;" }, bi).Index1;
+            Int32 bi = new SectionIndexes(html, new String[] { "Требования заказчиков" }).Index1;
+
+            bi = new SectionIndexes(html, new String[] { "Требования заказчика" }, bi).Index1;
             while (bi >= 0)
             {
                 SqlCommand cmd = new SqlCommand
@@ -625,10 +437,10 @@ namespace HttpDataServerProject8
                 foreach (Object[] p in mdCust)
                 {
                     Object v;
-                    Int32 index = new SectionIndexes(html, (String[])p[2], (Int32)p[1]).Index1;
+                    Int32 index = new SectionIndexes(html, (String[])p[2], bi).Index1;
                     if (index >= 0)
                     {
-                        if (p[3] is String r) v = GetValueByRegex(html, r, index); else v = p[4];
+                        if (p[3] is String r) v = Utilities.GetValueByRegex(html, r, index); else v = p[4];
                         if (v is String) v = Utilities.NormString(v as String);
                         if (v != null) cmd.Parameters.AddWithValue((String)p[0], v);
                     }
@@ -640,101 +452,16 @@ namespace HttpDataServerProject8
                     o = cmd.ExecuteScalar();
                     if (o != null && o.GetType() == typeof(Guid)) { aUid = (Guid)o; }
                 }
-                bi = new SectionIndexes(html, new String[] { "<h3>Требования заказчика&nbsp;" }, bi).Index1;
+                bi = new SectionIndexes(html, new String[] { "Требования заказчика" }, bi).Index1;
             }
-
-            //Object mdCst
-
-            {
-                /*
-                Object[][] mdCust = null;
-                if (expandRows.Length == 0 || noticeBoxExpands.Length == 0)
-                {
-                    mdCust = new Object[][] {
-                            // требования_заказчика
-                            new Object[] { "наименование_заказчика",                        noticeTabBoxWrappers[1], "./table//tr[1]/td[2]" },
-                            // условия_контракта
-                            new Object[] { "место_доставки_товара",                         noticeTabBoxWrappers[6], "./table//tr[1]/td[2]" },
-                            new Object[] { "сроки_поставки_товара",                         noticeTabBoxWrappers[6], "./table//tr[2]/td[2]" },
-                            new Object[] { "сведения_о_связи_с_позицией_плана_графика",     noticeTabBoxWrappers[0], "./table//tr[7]/td[2]" },
-                            new Object[] { "оплата_исполнения_контракта_по_годам",          noticeTabBoxWrappers[3], "./div[contains(@class, 'addingTbl')]/table//tr[1]/td[2]" },
-                            // обеспечение_заявок
-                            new Object[] { "размер_обеспечения",                            noticeTabBoxWrappers[7], "./table//tr[2]/td[2]" },
-                            new Object[] { "порядок_внесения_денежных_средств",             noticeTabBoxWrappers[7], "./table//tr[3]/td[2]" },
-                            new Object[] { "платежные_реквизиты",                           noticeTabBoxWrappers[7], "./table//tr[4]/td[2]" },
-                            // обеспечение_исполнения_контракта
-                            new Object[] { "размер_обеспечения_2",                          noticeTabBoxWrappers[8], "./table//tr[2]/td[2]" },
-                            new Object[] { "порядок_предоставления_обеспечения",            noticeTabBoxWrappers[8], "./table//tr[3]/td[2]" },
-                            new Object[] { "платежные_реквизиты_2",                         noticeTabBoxWrappers[8], "./table//tr[4]/td[2]" }
-                        };
-
-                    SaveAuctionCustomerRequirement(aUid, mdCust);
-                }
-                else // второй вариант - со списком поставщиков
-                {
-                    for (int i = 0; i < noticeBoxExpands.Length; i++)
-                    {
-                        mdCust = new Object[][] {
-                                // требования_заказчика
-                                new Object[] { "наименование_заказчика",                        noticeBoxExpands[i], ".//h3" },
-                                // условия_контракта
-                                //new Object[] { "место_доставки_товара",                         noticeTabBoxWrappers[6], "table//tr[1]/td[2]" },
-                                //new Object[] { "сроки_поставки_товара",                         noticeTabBoxWrappers[6], "table//tr[2]/td[2]" },
-                                new Object[] { "сведения_о_связи_с_позицией_плана_графика",     expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][1]/table//tr[1]/td[2]" },
-                                new Object[] { "оплата_исполнения_контракта_по_годам",          expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][2]/table//tr[1]/td[2]" },
-                                // обеспечение_заявок
-                                new Object[] { "размер_обеспечения",                            expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[2]/td[2]" },
-                                new Object[] { "порядок_внесения_денежных_средств",             expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[3]/td[2]" },
-                                new Object[] { "платежные_реквизиты",                           expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][3]/table//tr[4]/td[2]" },
-                                // обеспечение_исполнения_контракта
-                                new Object[] { "размер_обеспечения_2",                          expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[2]/td[2]" },
-                                new Object[] { "порядок_предоставления_обеспечения",            expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[3]/td[2]" },
-                                new Object[] { "платежные_реквизиты_2",                         expandRows[i], ".//div[contains(@class, 'noticeTabBoxWrapper')][4]/table//tr[4]/td[2]" }
-                            };
-                        SaveAuctionCustomerRequirement(aUid, mdCust);
-                    }
-                }
-                */
-            }
-        }
-        private static void SaveAuctionCustomerRequirement(Guid aUid, Object[][] mdCus)
-        {
-            SqlCommand cmd = new SqlCommand
-            {
-                Connection = new SqlConnection(Env.cnString),
-                CommandText = "[Auctions].[dbo].[save_customer_requirement]",
-                CommandType = CommandType.StoredProcedure
-            };
-            cmd.Parameters.AddWithValue("@закупка_uid", aUid);
-            foreach (Object[] nx in mdCus)
-            {
-                String name = (String)nx[0];
-                XmlNode node = (XmlNode)nx[1];
-                if (node != null)
-                {
-                    node = node.SelectSingleNode((String)nx[2]);
-                    if (node != null)
-                    {
-                        String value = Utilities.NormString(node.InnerText);
-                        if (name == "наименование_заказчика") value = value.Replace("Требования заказчика ", String.Empty);
-                        if (name[0] != '@') { name = "@" + name; }
-                        cmd.Parameters.AddWithValue(name, value);
-                    }
-                }
-            }
-            using (cmd.Connection)
-            {
-                cmd.Connection.Open();
-                cmd.ExecuteNonQuery();
-            }
-            return;
         }
     }
     class Fz223
     {
-        public static Guid SaveAuctionInf(List<AuctionInfBlock> aibs)
+        public static Guid SaveAuctionInf(String html)
         {
             Guid aUid = new Guid();
+            Regex re = new Regex("<td[^>]*?>(.*?)</td>", RegexOptions.Singleline);
             Object[][] md223 = new Object[][] { 
                 // Закупка
                 new Object[] { "номер", "Общие сведения о закупке", "Номер извещения" },
@@ -786,24 +513,25 @@ namespace HttpDataServerProject8
                 String dbName = mdRow[0] as String;
                 String blockName = mdRow[1] as String;
                 String keyText = mdRow[2] as String;
-                String value = String.Empty;
 
-                foreach (AuctionInfBlock block in aibs)
+                Int32 blockIndex = new SectionIndexes(html, new String[] { blockName }).Index1;
+                if (blockIndex >= 0)
                 {
-                    if (block.Name == blockName)
+                    Int32 keyIndex = new SectionIndexes(html, new String[] { keyText }).Index1;
+                    if (keyIndex >= 0)
                     {
-                        XmlDocument doc = block.Data;
-                        XmlNode node = doc.SelectSingleNode(String.Format(".//tr/td[contains(.,\"{0}\")]/following-sibling::td", keyText));
-                        if (node != null)
+                        Match match = re.Match(html, keyIndex);
+                        String value = null;
+                        if (match.Success && match.Groups.Count > 1)
                         {
-                            value = Utilities.NormString(node.InnerText);
-                            if (dbName[0] != '@') { dbName = "@" + dbName; }
+                            value = match.Groups[1].Value.Trim();
+                            value = Utilities.NormString(value);
                             cmd.Parameters.AddWithValue(dbName, value);
                         }
                     }
                 }
             }
-
+            
             using (cmd.Connection)
             {
                 Object o = null;
@@ -811,7 +539,7 @@ namespace HttpDataServerProject8
                 o = cmd.ExecuteScalar();
                 if (o != null && o.GetType() == typeof(Guid)) { aUid = (Guid)o; }
             }
-
+            
             return aUid;
         }
     }
@@ -868,6 +596,17 @@ namespace HttpDataServerProject8
                 else { Log.Write(response.StatusDescription); }
             }
             return html;
+        }
+        public static String GetValueByRegex(String src, String re, Int32 startAt = 0)
+        {
+            String value = null;
+            Regex regex = new Regex(re, RegexOptions.Singleline);
+            Match match = regex.Match(src, startAt);
+            if (match.Success && match.Groups.Count > 1)
+            {
+                value = match.Groups[1].Value.Trim();
+            }
+            return value;
         }
     }
     class SectionIndexes

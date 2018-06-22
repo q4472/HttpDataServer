@@ -434,7 +434,7 @@ namespace Tests
                 Command = "LoadAuction",
                 SessionId = Guid.NewGuid(),
                 Parameters = new RequestParameter[] {
-                    new RequestParameter { Name = "auction_number", Value = "0600600009018000027" },
+                    new RequestParameter { Name = "auction_number", Value = "31806536583" },
                     new RequestParameter { Name = "overwrite", Value = true },
                 }
             };
