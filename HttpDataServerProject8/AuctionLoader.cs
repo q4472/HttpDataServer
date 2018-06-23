@@ -299,10 +299,6 @@ namespace HttpDataServerProject8
 
             // берём основные блоки
 
-            // noticeTabBox содержит пары <h2 class="noticeBoxH2"> и <div class="noticeTabBoxWrapper"> с общей информацией для всех заказчиков
-            // <h2> заголовк общей информации
-            // <div> содержимое общей информации
-
             // заявка
             Int32 h0 = new SectionIndexes(html, new String[] { "cardHeader", ">" }).Index1;
             // общая_информация_о_закупке
