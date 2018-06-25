@@ -318,50 +318,50 @@ namespace HttpDataServerProject8
 
             Object[][] md44 = new Object[][] { 
                 // закупка
-                new Object[] { "номер",                                         h0, new String[] { "Закупка", "№" },                                        @"(\d*)" },
-                new Object[] { "дата_размещения",                               h0, new String[] { "Размещено:" },                                          @"(.*?)</div>" },
+                new Object[] { "номер",                                         h0, new String[] { "Закупка №" },                                           new String[] { "\n" } },
+                new Object[] { "дата_размещения",                               h0, new String[] { "Размещено:" },                                          new String[] { "</div>" } },
                 new Object[] { "кооператив",                                    h0, new String[] { "cooperative" },                                         null, "1" },
                 // общая_информация_о_закупке
-                new Object[] { "способ_определения_поставщика",                 t0, new String[] { "Способ определения поставщика", "<td", ">" },           @"(.*?)</td>" },
-                new Object[] { "наименование_электронной_площадки_в_интернете", t0, new String[] { "Наименование электронной площадки", "<td", ">" },       @"(.*?)</td>" },
-                new Object[] { "адрес_электронной_площадки_в_интернете",        t0, new String[] { "Адрес электронной площадки", "<td", ">", "<a", ">" },   @"(.*?)</a>" },
-                new Object[] { "размещение_осуществляет",                       t0, new String[] { "Размещение осуществляет", "<td", ">" },                 @"(.*?)</td>" },
-                new Object[] { "объект_закупки",                                t0, new String[] { "Наименование объекта закупки", "<td", ">" },            @"(.*?)</td>" },
-                new Object[] { "этап_закупки",                                  t0, new String[] { "Этап закупки", "<td", ">" },                            @"(.*?)</td>" },
-                new Object[] { "сведения_о_связи_с_позицией_плана_графика",     t0, new String[] { "Сведения о связи", "<td", ">" },                        @"(.*?)</td>" },
-                new Object[] { "номер_типового_контракта",                      t0, new String[] { "Номер типового контракта", "<td", ">" },                @"(.*?)</td>" },
+                new Object[] { "способ_определения_поставщика",                 t0, new String[] { "Способ определения поставщика", "<td", ">" },           new String[] { "</td>" } },
+                new Object[] { "наименование_электронной_площадки_в_интернете", t0, new String[] { "Наименование электронной площадки", "<td", ">" },       new String[] { "</td>" } },
+                new Object[] { "адрес_электронной_площадки_в_интернете",        t0, new String[] { "Адрес электронной площадки", "<td", ">", "<a", ">" },   new String[] { "</a>" } },
+                new Object[] { "размещение_осуществляет",                       t0, new String[] { "Размещение осуществляет", "<td", ">" },                 new String[] { "</td>" } },
+                new Object[] { "объект_закупки",                                t0, new String[] { "Наименование объекта закупки", "<td", ">" },            new String[] { "</td>" } },
+                new Object[] { "этап_закупки",                                  t0, new String[] { "Этап закупки", "<td", ">" },                            new String[] { "</td>" } },
+                new Object[] { "сведения_о_связи_с_позицией_плана_графика",     t0, new String[] { "Сведения о связи", "<td", ">" },                        new String[] { "</td>" } },
+                new Object[] { "номер_типового_контракта",                      t0, new String[] { "Номер типового контракта", "<td", ">" },                new String[] { "</td>" } },
                 // информация_об_организации_осуществляющей_определение_поставщика
-                new Object[] { "организация_осуществляющая_размещение",         t1, new String[] { "Организация, осуществляющая размещение", "<td", ">" },  @"(.*?)</td>" },
-                new Object[] { "почтовый_адрес",                                t1, new String[] { "Почтовый адрес", "<td", ">" },                          @"(.*?)</td>" },
-                new Object[] { "место_нахождения",                              t1, new String[] { "Место нахождения", "<td", ">" },                        @"(.*?)</td>" },
-                new Object[] { "ответственное_должностное_лицо",                t1, new String[] { "Ответственное должностное лицо", "<td", ">" },          @"(.*?)</td>" },
-                new Object[] { "адрес_электронной_почты",                       t1, new String[] { "Адрес электронной почты", "<td", ">" },                 @"(.*?)</td>" },
-                new Object[] { "номер_контактного_телефона",                    t1, new String[] { "Номер контактного телефона", "<td", ">" },              @"(.*?)</td>" },
-                new Object[] { "факс",                                          t1, new String[] { "Факс", "<td", ">" },                                    @"(.*?)</td>" },
-                new Object[] { "дополнительная_информация",                     t1, new String[] { "Дополнительная информация", "<td", ">" },               @"(.*?)</td>" },
+                new Object[] { "организация_осуществляющая_размещение",         t1, new String[] { "Организация, осуществляющая размещение", "<td", ">" },  new String[] { "</td>" } },
+                new Object[] { "почтовый_адрес",                                t1, new String[] { "Почтовый адрес", "<td", ">" },                          new String[] { "</td>" } },
+                new Object[] { "место_нахождения",                              t1, new String[] { "Место нахождения", "<td", ">" },                        new String[] { "</td>" } },
+                new Object[] { "ответственное_должностное_лицо",                t1, new String[] { "Ответственное должностное лицо", "<td", ">" },          new String[] { "</td>" } },
+                new Object[] { "адрес_электронной_почты",                       t1, new String[] { "Адрес электронной почты", "<td", ">" },                 new String[] { "</td>" } },
+                new Object[] { "номер_контактного_телефона",                    t1, new String[] { "Номер контактного телефона", "<td", ">" },              new String[] { "</td>" } },
+                new Object[] { "факс",                                          t1, new String[] { "Факс", "<td", ">" },                                    new String[] { "</td>" } },
+                new Object[] { "дополнительная_информация",                     t1, new String[] { "Дополнительная информация", "<td", ">" },               new String[] { "</td>" } },
                 // информация_о_процедуре_закупки
-                new Object[] { "дата_и_время_начала_подачи_заявок",             t2, new String[] { "Дата и время начала подачи", "<td", ">" },              @"(.*?)</td>" },
-                new Object[] { "дата_и_время_окончания_подачи_заявок",          t2, new String[] { "Дата и время окончания подачи", "<td", ">" },           @"(.*?)</td>" },
-                new Object[] { "место_подачи_заявок",                           t2, new String[] { "Место подачи заявок", "<td", ">" },                     @"(.*?)</td>" },
-                new Object[] { "порядок_подачи_заявок",                         t2, new String[] { "Порядок подачи заявок", "<td", ">" },                   @"(.*?)</td>" },
-                new Object[] { "дата_окончания_срока_рассмотрения_первых_частей", t2, new String[] { "Дата окончания срока", "<td", ">" },                  @"(.*?)</td>" },
-                new Object[] { "дата_проведения_аукциона_в_электронной_форме",  t2, new String[] { "Дата проведения", "<td", ">" },                         @"(.*?)</td>" },
-                new Object[] { "время_проведения_аукциона",                     t2, new String[] { "Время проведения", "<td", ">" },                        @"(.*?)</td>" },
-                new Object[] { "дополнительная_информация2",                    t2, new String[] { "Дополнительная информация", "<td", ">" },               @"(.*?)</td>" },
+                new Object[] { "дата_и_время_начала_подачи_заявок",             t2, new String[] { "Дата и время начала подачи", "<td", ">" },              new String[] { "</td>" } },
+                new Object[] { "дата_и_время_окончания_подачи_заявок",          t2, new String[] { "Дата и время окончания подачи", "<td", ">" },           new String[] { "</td>" } },
+                new Object[] { "место_подачи_заявок",                           t2, new String[] { "Место подачи заявок", "<td", ">" },                     new String[] { "</td>" } },
+                new Object[] { "порядок_подачи_заявок",                         t2, new String[] { "Порядок подачи заявок", "<td", ">" },                   new String[] { "</td>" } },
+                new Object[] { "дата_окончания_срока_рассмотрения_первых_частей", t2, new String[] { "Дата окончания срока", "<td", ">" },                  new String[] { "</td>" } },
+                new Object[] { "дата_проведения_аукциона_в_электронной_форме",  t2, new String[] { "Дата проведения", "<td", ">" },                         new String[] { "</td>" } },
+                new Object[] { "время_проведения_аукциона",                     t2, new String[] { "Время проведения", "<td", ">" },                        new String[] { "</td>" } },
+                new Object[] { "дополнительная_информация2",                    t2, new String[] { "Дополнительная информация", "<td", ">" },               new String[] { "</td>" } },
                 // начальная_максимальная_цена_контракта
-                new Object[] { "начальная_максимальная_цена_контракта",         t3, new String[] { "Начальная (максимальная) цена", "<td", ">" },           @"(.*?)</td>" },
-                new Object[] { "валюта",                                        t3, new String[] { "Валюта", "<td", ">" },                                  @"(.*?)</td>" },
-                new Object[] { "источник_финансирования",                       t3, new String[] { "Источник финансирования", "<td", ">" },                 @"(.*?)</td>" },
-                new Object[] { "идентификационный_код_закупки",                 t3, new String[] { "Идентификационный код закупки", "<td", ">" },           @"(.*?)</td>" },
-                new Object[] { "оплата_исполнения_контракта_по_годам",          t3, new String[] { "Оплата исполнения контракта", "<td", ">" },             @"(.*?)</td>" }, // @"../div[contains(@class, 'addingTbl')]/table//tr[1]/td[2]"
+                new Object[] { "начальная_максимальная_цена_контракта",         t3, new String[] { "Начальная (максимальная) цена", "<td", ">" },           new String[] { "</td>" } },
+                new Object[] { "валюта",                                        t3, new String[] { "Валюта", "<td", ">" },                                  new String[] { "</td>" } },
+                new Object[] { "источник_финансирования",                       t3, new String[] { "Источник финансирования", "<td", ">" },                 new String[] { "</td>" } },
+                new Object[] { "идентификационный_код_закупки",                 t3, new String[] { "Идентификационный код закупки", "<td", ">" },           new String[] { "</td>" } },
+                new Object[] { "оплата_исполнения_контракта_по_годам",          t3, new String[] { "Оплата исполнения контракта", "<td", ">" },             new String[] { "</td>" } }, // @"../div[contains(@class, 'addingTbl')]/table//tr[1]/td[2]"
                 // информация_об_объекте_закупки
-                new Object[] { "описание_объекта_закупки",                      t4, new String[] { "Описание объекта закупки" },                            @"(.*?)</td>" },
-                new Object[] { "условия_запреты_и_ограничения_допуска_товаров", t4, new String[] { "Условия", "запреты", "ограничения", "<td", ">" },       @"(.*?)</td>" },
-                new Object[] { "табличная_часть_в_формате_html",                t4, new String[] { "Табличная часть", "html", "<td", ">" },                 @"(.*?)</td>" },
+                new Object[] { "описание_объекта_закупки",                      t4, new String[] { "Описание объекта закупки" },                            new String[] { "</td>" } },
+                new Object[] { "условия_запреты_и_ограничения_допуска_товаров", t4, new String[] { "Условия", "запреты", "ограничения", "<td", ">" },       new String[] { "</td>" } },
+                new Object[] { "табличная_часть_в_формате_html",                t4, new String[] { "Табличная часть", "html", "<td", ">" },                 new String[] { "</td>" } },
                 // преимущества_требования_к_участникам
-                new Object[] { "преимущества",                                  t5, new String[] { "Преимущества", "<td", ">" },                            @"(.*?)</td>" },
-                new Object[] { "требования",                                    t5, new String[] { "Требования", "<td", ">" },                              @"(.*?)</td>" },
-                new Object[] { "ограничения",                                   t5, new String[] { "Ограничения", "<td", ">" },                             @"(.*?)</td>" }
+                new Object[] { "преимущества",                                  t5, new String[] { "Преимущества", "<td", ">" },                            new String[] { "</td>" } },
+                new Object[] { "требования",                                    t5, new String[] { "Требования", "<td", ">" },                              new String[] { "</td>" } },
+                new Object[] { "ограничения",                                   t5, new String[] { "Ограничения", "<td", ">" },                             new String[] { "</td>" } }
             };
 
             SqlCommand cmd = new SqlCommand
@@ -372,13 +372,22 @@ namespace HttpDataServerProject8
             };
             foreach (Object[] p in md44)
             {
-                Object v;
-                Int32 index = new SectionIndexes(html, (String[])p[2], (Int32)p[1]).Index1;
-                if (index >= 0)
+                String v = null;
+                SectionIndexes sect;
+                if (p[3] != null)
                 {
-                    if (p[3] is String r) v = Utilities.GetValueByRegex(html, r, index); else v = p[4];
-                    if (v is String) v = Utilities.NormString(v as String);
-                    if (v != null) cmd.Parameters.AddWithValue((String)p[0], v);
+                    sect = new SectionIndexes(html, (String[])p[2], (Int32)p[1], (String[])p[3]);
+                    v = sect.InnerText;
+                }
+                else
+                {
+                    sect = new SectionIndexes(html, (String[])p[2], (Int32)p[1]);
+                    if (sect.HeadIsFound) v = (String)p[4];
+                }
+                if (v != null)
+                {
+                    v = Utilities.NormString(v);
+                    cmd.Parameters.AddWithValue((String)p[0], v);
                 }
             }
             using (cmd.Connection)
@@ -395,34 +404,31 @@ namespace HttpDataServerProject8
             // здесь может быть два варианта
             // первый - когда списки expand пусты - сохраняем из основного блока
             // второй - сохраняем из списков
-            // кажется теперь только второй вариант 2018-06-20
-
-            // второй вариант
-            // baseIndex
 
             Object[][] mdCust = new Object[][] {
                 // требования_заказчика
-                new Object[] { "наименование_заказчика",                    0, new String[] { "&nbsp;" },  "(.*?)</h3>" },
+                new Object[] { "наименование_заказчика",                    0, new String[] { "&nbsp;" },                                                       new String[] { "</h3>" } },
                 // условия_контракта
-                new Object[] { "место_доставки_товара",                     0, new String[] { "Место доставки", "<td", ">" },                       "(.*?)</td>" },
-                new Object[] { "сроки_поставки_товара",                     0, new String[] { "Сроки поставки", "<td", ">" },                       "(.*?)</td>" },
-                new Object[] { "сведения_о_связи_с_позицией_плана_графика", 0, new String[] { "Сведения о связи", "Сведения о связи", "<td", ">" }, "(.*?)</td>" },
-                new Object[] { "оплата_исполнения_контракта_по_годам",      0, new String[] { "Оплата исполнения", "<td", ">" },                    "(.*?)</td>" },
+                new Object[] { "место_доставки_товара",                     0, new String[] { "Место доставки", "<td", ">" },                                   new String[] { "</td>" } },
+                new Object[] { "сроки_поставки_товара",                     0, new String[] { "Сроки поставки", "<td", ">" },                                   new String[] { "</td>" } },
+                new Object[] { "сведения_о_связи_с_позицией_плана_графика", 0, new String[] { "Сведения о связи", "Сведения о связи", "<td", ">" },             new String[] { "</td>" } },
+                new Object[] { "оплата_исполнения_контракта_по_годам",      0, new String[] { "Оплата исполнения", "<td", ">" },                                new String[] { "</td>" } },
                 // обеспечение_заявок
-                new Object[] { "размер_обеспечения",                        0, new String[] { "Обеспечение заявок", "Размер обеспечения", "<td", ">" },  "(.*?)</td>" },
-                new Object[] { "порядок_внесения_денежных_средств",         0, new String[] { "Обеспечение заявок", "Порядок внесения", "<td", ">" },    "(.*?)</td>" },
-                new Object[] { "платежные_реквизиты",                       0, new String[] { "Обеспечение заявок", "Платежные реквизиты", "<td", ">" }, "(.*?)</td>" },
+                new Object[] { "размер_обеспечения",                        0, new String[] { "Обеспечение заявок", "Размер обеспечения", "<td", ">" },         new String[] { "</td>" } },
+                new Object[] { "порядок_внесения_денежных_средств",         0, new String[] { "Обеспечение заявок", "Порядок внесения", "<td", ">" },           new String[] { "</td>" } },
+                new Object[] { "платежные_реквизиты",                       0, new String[] { "Обеспечение заявок", "Платежные реквизиты", "<td", ">" },        new String[] { "</td>" } },
                 // обеспечение_исполнения_контракта
-                new Object[] { "размер_обеспечения_2",                      0, new String[] { "Обеспечение исполнения", "Размер обеспечения", "<td", ">" },     "(.*?)</td>" },
-                new Object[] { "порядок_предоставления_обеспечения",        0, new String[] { "Обеспечение исполнения", "Порядок предоставления", "<td", ">" }, "(.*?)</td>" },
-                new Object[] { "платежные_реквизиты_2",                     0, new String[] { "Обеспечение исполнения", "Платежные реквизиты", "<td", ">" },    "(.*?)</td>" },
+                new Object[] { "размер_обеспечения_2",                      0, new String[] { "Обеспечение исполнения", "Размер обеспечения", "<td", ">" },     new String[] { "</td>" } },
+                new Object[] { "порядок_предоставления_обеспечения",        0, new String[] { "Обеспечение исполнения", "Порядок предоставления", "<td", ">" }, new String[] { "</td>" } },
+                new Object[] { "платежные_реквизиты_2",                     0, new String[] { "Обеспечение исполнения", "Платежные реквизиты", "<td", ">" },    new String[] { "</td>" } },
             };
 
             Int32 bi = new SectionIndexes(html, new String[] { "Требования заказчиков" }).Index1;
 
-            bi = new SectionIndexes(html, new String[] { "Требования заказчика" }, bi).Index1;
-            while (bi >= 0)
+            var sect = new SectionIndexes(html, new String[] { "Требования заказчика" }, bi);
+            if (!sect.HeadIsFound)
             {
+                // первый вариант
                 SqlCommand cmd = new SqlCommand
                 {
                     Connection = new SqlConnection(Env.cnString),
@@ -430,16 +436,25 @@ namespace HttpDataServerProject8
                     CommandType = CommandType.StoredProcedure
                 };
                 cmd.Parameters.AddWithValue("закупка_uid", aUid);
+                String v;
                 foreach (Object[] p in mdCust)
                 {
-                    Object v;
-                    Int32 index = new SectionIndexes(html, (String[])p[2], bi).Index1;
-                    if (index >= 0)
+                    v = null;
+                    sect = new SectionIndexes(html, (String[])p[2], (Int32)p[1], (String[])p[3]);
+                    v = sect.InnerText;
+                    if (v != null)
                     {
-                        if (p[3] is String r) v = Utilities.GetValueByRegex(html, r, index); else v = p[4];
-                        if (v is String) v = Utilities.NormString(v as String);
-                        if (v != null) cmd.Parameters.AddWithValue((String)p[0], v);
+                        v = Utilities.NormString(v);
+                        cmd.Parameters.AddWithValue((String)p[0], v);
                     }
+                }
+                sect = new SectionIndexes(html, new String[] { "Общая информация", "Размещение осуществляет", "<td", ">", "<a", ">" }, 0, new String[] { "</a>" });
+                v = sect.InnerText;
+                if (v != null)
+                {
+                    v = Utilities.NormString(v);
+                    if (cmd.Parameters.Contains("наименование_заказчика")) cmd.Parameters["наименование_заказчика"].Value = v;
+                    else cmd.Parameters.AddWithValue("наименование_заказчика", v);
                 }
                 using (cmd.Connection)
                 {
@@ -448,7 +463,40 @@ namespace HttpDataServerProject8
                     o = cmd.ExecuteScalar();
                     if (o != null && o.GetType() == typeof(Guid)) { aUid = (Guid)o; }
                 }
-                bi = new SectionIndexes(html, new String[] { "Требования заказчика" }, bi).Index1;
+            }
+            else
+            {
+                // второй вариант
+                while (sect.HeadIsFound)
+                {
+                    Int32 ci = sect.Index1;
+                    SqlCommand cmd = new SqlCommand
+                    {
+                        Connection = new SqlConnection(Env.cnString),
+                        CommandText = "[Auctions].[dbo].[save_customer_requirement]",
+                        CommandType = CommandType.StoredProcedure
+                    };
+                    cmd.Parameters.AddWithValue("закупка_uid", aUid);
+                    foreach (Object[] p in mdCust)
+                    {
+                        String v = null;
+                        sect = new SectionIndexes(html, (String[])p[2], (Int32)p[1], (String[])p[3]);
+                        v = sect.InnerText;
+                        if (v != null)
+                        {
+                            v = Utilities.NormString(v);
+                            cmd.Parameters.AddWithValue((String)p[0], v);
+                        }
+                    }
+                    using (cmd.Connection)
+                    {
+                        Object o = null;
+                        cmd.Connection.Open();
+                        o = cmd.ExecuteScalar();
+                        if (o != null && o.GetType() == typeof(Guid)) { aUid = (Guid)o; }
+                    }
+                    sect = new SectionIndexes(html, new String[] { "Требования заказчика" }, ci);
+                }
             }
         }
     }
@@ -527,7 +575,7 @@ namespace HttpDataServerProject8
                     }
                 }
             }
-            
+
             using (cmd.Connection)
             {
                 Object o = null;
@@ -535,7 +583,7 @@ namespace HttpDataServerProject8
                 o = cmd.ExecuteScalar();
                 if (o != null && o.GetType() == typeof(Guid)) { aUid = (Guid)o; }
             }
-            
+
             return aUid;
         }
     }
@@ -593,32 +641,21 @@ namespace HttpDataServerProject8
             }
             return html;
         }
-        public static String GetValueByRegex(String src, String re, Int32 startAt = 0)
-        {
-            String value = null;
-            Regex regex = new Regex(re, RegexOptions.Singleline);
-            Match match = regex.Match(src, startAt);
-            if (match.Success && match.Groups.Count > 1)
-            {
-                value = match.Groups[1].Value.Trim();
-            }
-            return value;
-        }
     }
     class SectionIndexes
     {
         private String src;
-        private Int32 i0 = -1;
-        private Int32 i1 = -1;
-        private Int32 i2 = -1;
-        private Int32 i3 = -1;
+        private Int32 i0;
+        private Int32 i1;
+        private Int32 i2;
+        private Int32 i3;
 
         public Int32 Index0
         {
             get { return i0; }
             set
             {
-                if (value < -1 || value > src.Length) throw new ArgumentOutOfRangeException();
+                if (value < 0 || value > src.Length) throw new ArgumentOutOfRangeException();
                 else { i0 = i1 = i2 = i3 = value; }
             }
         }
@@ -649,90 +686,58 @@ namespace HttpDataServerProject8
                 else i3 = value;
             }
         }
-
-        public SectionIndexes(String src, String[] bf = null, Int32 startIndex = 0, String[] ef = null, Int32 endIndex = 0)
+        public Boolean HeadIsFound { get => Index1 > Index0; }
+        public Boolean TailIsFound { get => Index3 > Index2; }
+        public String InnerText { get => (HeadIsFound && TailIsFound) ? src.Substring(Index1, Index2 - Index1) : null; }
+        public SectionIndexes(String src, String[] hf = null, Int32 startIndex = 0, String[] tf = null)
         {
-            if (src is null) throw new ArgumentNullException();
+            if (src == null || startIndex < 0) throw new ArgumentException();
             this.src = src;
 
-            if (src is null || src.Length == 0) return;
-            if (endIndex <= 0 || endIndex > src.Length) endIndex = src.Length;
-
-            if (bf != null && bf.Length > 0)
+            Index0 = startIndex;
+            if (hf != null && hf.Length > 0)
             {
-                bool bfIsFound = false;
-                while (!bfIsFound && startIndex < endIndex)
+                bool hfIsFound = false;
+                foreach (String value in hf)
                 {
-                    foreach (String value in bf)
+                    if (!String.IsNullOrEmpty(value))
                     {
-                        if (!String.IsNullOrEmpty(value))
+                        Int32 index = src.IndexOf(value, Index1);
+                        if (index >= Index1)
                         {
-                            Int32 index = src.IndexOf(value, startIndex);
-                            if (index >= 0)
-                            {
-                                bfIsFound = true;
-                                if (Index0 == -1)
-                                {
-                                    Index0 = index;
-                                    Index1 = index + value.Length;
-                                    Index2 = Index1;
-                                    Index3 = Index2;
-                                }
-                                else
-                                {
-                                    Index1 = index + value.Length;
-                                    Index2 = Index1;
-                                    Index3 = Index2;
-                                }
-                                startIndex = Index1;
-                            }
-                            else
-                            {
-                                bfIsFound = false;
-                                Index0 = -1;
-                                Index1 = -1;
-                                Index2 = -1;
-                                Index3 = -1;
-                                startIndex = endIndex;
-                                break;
-                            }
+                            if (!hfIsFound) Index0 = index;
+                            Index1 = index + value.Length;
+                            hfIsFound = true;
+                        }
+                        else
+                        {
+                            Index1 = Index0;
+                            hfIsFound = false;
+                            break;
                         }
                     }
                 }
-                if (bfIsFound && ef != null && ef.Length > 0)
+            }
+
+            if (tf != null && tf.Length > 0)
+            {
+                bool efIsFound = false;
+                foreach (String value in tf)
                 {
-                    startIndex = Index1;
-                    bool efIsFound = false;
-                    while (!efIsFound && startIndex < endIndex)
+                    if (!String.IsNullOrEmpty(value))
                     {
-                        foreach (String value in bf)
+                        Int32 index = src.IndexOf(value, Index3);
+                        if (index >= Index3)
                         {
-                            if (!String.IsNullOrEmpty(value))
-                            {
-                                Int32 index = src.IndexOf(value, startIndex);
-                                if (index >= 0)
-                                {
-                                    efIsFound = true;
-                                    if (Index2 == Index1)
-                                    {
-                                        Index2 = index;
-                                        Index3 = index + value.Length;
-                                    }
-                                    else
-                                    {
-                                        Index3 = index + value.Length;
-                                    }
-                                    startIndex = Index3;
-                                }
-                                else
-                                {
-                                    efIsFound = false;
-                                    Index2 = Index1;
-                                    Index3 = Index1;
-                                    startIndex = endIndex;
-                                    break;
-                                }
-                            }
+                            if (!efIsFound) Index2 = index;
+                            Index3 = index + value.Length;
+                            efIsFound = true;
+                        }
+                        else
+                        {
+                            Index3 = Index2;
+                            efIsFound = false;
+                            break;
                         }
                     }
                 }
