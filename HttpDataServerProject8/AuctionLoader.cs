@@ -330,6 +330,7 @@ namespace HttpDataServerProject8
                 new Object[] { "этап_закупки",                                  t0, new String[] { "Этап закупки", "<td", ">" },                            new String[] { "</td>" } },
                 new Object[] { "сведения_о_связи_с_позицией_плана_графика",     t0, new String[] { "Сведения о связи", "<td", ">" },                        new String[] { "</td>" } },
                 new Object[] { "номер_типового_контракта",                      t0, new String[] { "Номер типового контракта", "<td", ">" },                new String[] { "</td>" } },
+                new Object[] { "дата_и_время_окончания_подачи_заявок",          t0, new String[] { "Дата и время окончания срока подачи", "<td", ">" },     new String[] { "</td>" } },
                 // информация_об_организации_осуществляющей_определение_поставщика
                 new Object[] { "организация_осуществляющая_размещение",         t1, new String[] { "Организация, осуществляющая размещение", "<td", ">" },  new String[] { "</td>" } },
                 new Object[] { "почтовый_адрес",                                t1, new String[] { "Почтовый адрес", "<td", ">" },                          new String[] { "</td>" } },
@@ -381,15 +382,18 @@ namespace HttpDataServerProject8
                 }
                 else
                 {
-                    sect = new SectionIndexes(html, (String[])p[2], (Int32)p[1]);
+                    sect = new SectionIndexes(html, (String[])p[2]);
                     if (sect.HeadIsFound) v = (String)p[4];
                 }
                 if (v != null)
                 {
                     v = Utilities.NormString(v);
-                    cmd.Parameters.AddWithValue((String)p[0], v);
+                    String dbName = (String)p[0];
+                    if (cmd.Parameters.Contains(dbName)) cmd.Parameters[dbName].Value = v;
+                    else cmd.Parameters.AddWithValue(dbName, v);
                 }
             }
+
             using (cmd.Connection)
             {
                 Object o = null;
@@ -397,6 +401,7 @@ namespace HttpDataServerProject8
                 o = cmd.ExecuteScalar();
                 if (o != null && o.GetType() == typeof(Guid)) { aUid = (Guid)o; }
             }
+
             return aUid;
         }
         private static void ParseAndSaveAuction44FzCustomerRequirement(Guid aUid, String html)
