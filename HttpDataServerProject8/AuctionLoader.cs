@@ -480,7 +480,7 @@ namespace HttpDataServerProject8
                     foreach (Object[] p in mdCust)
                     {
                         String v = null;
-                        sect = new SectionIndexes(html, (String[])p[2], (Int32)p[1], (String[])p[3]);
+                        sect = new SectionIndexes(html, (String[])p[2], ci, (String[])p[3]);
                         v = sect.InnerText;
                         if (v != null)
                         {
