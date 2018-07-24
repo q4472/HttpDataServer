@@ -561,7 +561,6 @@ namespace HttpDataServerProject8
             {
                 var sect = new SectionIndexes(html, (String[])p[1], 0, (String[])p[2]);
                 String v = sect.InnerText;
-                v.Replace("<span>", "").Replace("</span>", "");
                 if (v != null)
                 {
                     String dbName = p[0] as String;
@@ -593,6 +592,7 @@ namespace HttpDataServerProject8
             String r = s;
             if (!String.IsNullOrWhiteSpace(r))
             {
+                r = r.Replace("<span>", "").Replace("</span>", "");
                 r = r.Replace("&nbsp;", " ").Replace("&laquo;", "«").Replace("&raquo;", "»").Replace("&#034;", "\"").Replace("&#34;", "\"");
                 r = r.Replace("\t", " ").Replace("\n", " ").Replace("\r", " ");
                 while (r.Contains("  ")) r = r.Replace("  ", " ");
