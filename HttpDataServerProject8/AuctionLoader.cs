@@ -512,7 +512,7 @@ namespace HttpDataServerProject8
             Guid aUid = new Guid();
             Object[][] md223 = new Object[][] { 
                 // Закупка
-                new Object[] { "номер",                                     new String[] { "Общие сведения", "Номер извещения",                             "<td", ">" },           new String[] { "</td>" } },
+                new Object[] { "номер",                                     new String[] { "Общие сведения", "омер извещения",                              "<td", ">" },           new String[] { "</td>" } },
                 new Object[] { "дата_размещения",                           new String[] { "Общие сведения", "Дата размещения извещения",                   "<td", ">" },           new String[] { "</td>" } },
                 // Общие сведения о закупке 
                 new Object[] { "номер_извещения",                           new String[] { "Общие сведения", "Номер извещения",                             "<td", ">" },           new String[] { "</td>" } },
@@ -561,6 +561,7 @@ namespace HttpDataServerProject8
             {
                 var sect = new SectionIndexes(html, (String[])p[1], 0, (String[])p[2]);
                 String v = sect.InnerText;
+                v.Replace("<span>", "").Replace("</span>", "");
                 if (v != null)
                 {
                     String dbName = p[0] as String;

@@ -83,13 +83,13 @@ namespace Tests
             try
             {
                 //TestRegex();
-                TestLinks();
+                //TestLinks();
                 //TestInterop();
                 //TestXmlSerializer();
                 //Test1c();
                 //Console.ReadKey();
                 //MailServer.Exec();
-                //TestHttpDataServer();
+                TestHttpDataServer();
                 //Test1Cv8UT11();
             }
             catch (Exception e) { Console.WriteLine(e); }
@@ -434,7 +434,7 @@ namespace Tests
                 Command = "LoadAuction",
                 SessionId = Guid.NewGuid(),
                 Parameters = new RequestParameter[] {
-                    new RequestParameter { Name = "auction_number", Value = "31806396413" },
+                    new RequestParameter { Name = "auction_number", Value = "31806726909" },
                     new RequestParameter { Name = "overwrite", Value = true },
                 }
             };
