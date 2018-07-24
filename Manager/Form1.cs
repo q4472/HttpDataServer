@@ -82,7 +82,7 @@ namespace Manager
         {
             // Загрузить в память Переводы из 1с83
             Dictionary<String, Object> pars = new Dictionary<String, Object>();
-            pars.Add("НачалоПериода", new DateTime(2018, 4, 1, 0, 0, 0));
+            pars.Add("НачалоПериода", new DateTime(2018, 5, 1, 0, 0, 0));
             pars.Add("КонецПериода", new DateTime(2018, 12, 31, 23, 59, 59));
 
             DataSet ds = OcStoredProcedures.Exec0("GetPaymentList", pars);

@@ -209,7 +209,7 @@ namespace HttpDataServerProject1
             System.Diagnostics.Process pi = new System.Diagnostics.Process();
             pi.StartInfo.Domain = "sibdomain.ru";
             pi.StartInfo.UserName = "sokolov";
-            pi.StartInfo.Password = ReadPassword("1234560");
+            pi.StartInfo.Password = ReadPassword("1234561");
             pi.StartInfo.UseShellExecute = false;
             pi.StartInfo.Arguments = String.Join(" ", args);
 

@@ -83,13 +83,13 @@ namespace Tests
             try
             {
                 //TestRegex();
-                //TestLinks();
+                TestLinks();
                 //TestInterop();
                 //TestXmlSerializer();
                 //Test1c();
                 //Console.ReadKey();
                 //MailServer.Exec();
-                TestHttpDataServer();
+                //TestHttpDataServer();
                 //Test1Cv8UT11();
             }
             catch (Exception e) { Console.WriteLine(e); }
