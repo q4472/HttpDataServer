@@ -485,6 +485,7 @@ namespace HttpDataServerProject4
                     {
                         НомерДок = Расходная.НомерДок.Trim(),
                         ДатаДок = Расходная.ДатаДок,
+                        Маркетолог = Расходная.ПолучитьАтрибут("Маркетолог") as String
                     };
 
                     if (СчетФактура != null)
@@ -629,6 +630,7 @@ namespace HttpDataServerProject4
     {
         public String НомерДок;
         public DateTime ДатаДок;
+        public String Маркетолог;
         public String НомерСФ;
         public DateTime ДатаСФ;
         public DataTable ТабличнаяЧасть;
