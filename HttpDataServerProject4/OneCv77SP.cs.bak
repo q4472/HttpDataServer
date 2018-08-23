@@ -5,7 +5,7 @@ using System.Collections;
 using System.Data;
 using System.Text.RegularExpressions;
 
-namespace HttpDataServerProject14
+namespace HttpDataServerProject4
 {
     public class OcStoredProcedure
     {
@@ -256,8 +256,6 @@ namespace HttpDataServerProject14
                 }
                 Log.Write(String.Format("'{0}', '{1}', '{2}', '{3}', '{4}'", docDate, docNo, track, sDate, rDate));
                 // Пробуем найти Расходную.
-                //var Расходная = new Документ(V77gc.СоздатьОбъект("Документ.Расходная"));
-                //if (Расходная.НайтиПоНомеру(docNo, Convert.ToDateTime(docDate)) == 1)
                 Документ Расходная = null; // new Документ(V77gc.СоздатьОбъект("Документ.Расходная"));
                 var Расходные = new Документ(V77gc.СоздатьОбъект("Документ.Расходная"));
                 if (Расходные.ВыбратьДокументы(new DateTime(2018, 3, 1), new DateTime(2018, 12, 31)) == 1)
