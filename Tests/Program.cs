@@ -431,15 +431,17 @@ namespace Tests
         {
             RequestPackage rqp = new RequestPackage
             {
-                Command = "LoadAuction",
+                Command = "ПолучитьСписокПриходныхНакладных",
                 SessionId = Guid.NewGuid(),
+                /*
                 Parameters = new RequestParameter[] {
                     new RequestParameter { Name = "auction_number", Value = "31806726909" },
                     new RequestParameter { Name = "overwrite", Value = true },
                 }
+                */
             };
-            Console.WriteLine("Request to 'http://127.0.0.1:11008/'.\n");
-            ResponsePackage rsp = rqp.GetResponse("http://127.0.0.1:11008/");
+            Console.WriteLine("Request to 'http://127.0.0.1:11015/'.\n");
+            ResponsePackage rsp = rqp.GetResponse("http://127.0.0.1:11015/");
             if (rsp == null)
             {
                 Console.WriteLine("rsp is null.\n");
@@ -447,6 +449,20 @@ namespace Tests
             else
             {
                 Console.WriteLine(String.Format("rsp.Status: '{0}'\n", rsp.Status));
+                if(rsp.Data != null)
+                {
+                    Console.WriteLine(String.Format("Получен набор данных."));
+                    DataSet ds = rsp.Data;
+                    if (ds.Tables.Count > 0)
+                    {
+                        Console.WriteLine($"В нём таблиц: {ds.Tables.Count}.");
+                        foreach(DataTable dt in ds.Tables)
+                        {
+                            Console.WriteLine($"Таблица: '{dt.TableName}'");
+                        }
+                    }
+                    else { Console.WriteLine("Таблиц в нём нет."); }
+                }
             }
             return;
         }

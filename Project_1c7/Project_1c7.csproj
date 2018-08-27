@@ -4,15 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0620FE53-909B-451D-96F2-61AA558B71E3}</ProjectGuid>
+    <ProjectGuid>{B0A07C41-9FA0-4716-B1EF-08C547BA46F2}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>HttpDataServerProject14_1c7</RootNamespace>
-    <AssemblyName>HttpDataServerProject14_1c7</AssemblyName>
+    <RootNamespace>Project_1c7</RootNamespace>
+    <AssemblyName>Project_1c7</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>C:\Lnetpub\DataService 1c on port 11014\</PublishUrl>
+    <PublishUrl>C:\Lnetpub\DataService 1c7\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -22,7 +22,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>41</ApplicationRevision>
+    <ApplicationRevision>1</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -48,10 +48,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>34557D34DCD53AFE3B386E390DE28A0B895DE570</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>36A0A4CD7F1C62CA99BCC2CFA17FC5FDA193776F</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>HttpDataServerProject14_1c7_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>Project_1c7_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -69,9 +69,6 @@
     <Reference Include="Json, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ClassLibrary\Nskd\Json\bin\Debug\Json.dll</HintPath>
-    </Reference>
-    <Reference Include="OneCv77_G">
-      <HintPath>..\..\ClassLibrary\Nskd\OneCv77_G\bin\Debug\OneCv77_G.dll</HintPath>
     </Reference>
     <Reference Include="SqlServer">
       <HintPath>..\..\ClassLibrary\Nskd\SqlServer\bin\Debug\SqlServer.dll</HintPath>
@@ -96,7 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="HttpDataServerProject14_1c7_TemporaryKey.pfx" />
+    <None Include="Project_1c7_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">

@@ -5,14 +5,12 @@ using System.Collections;
 using System.Data;
 using System.Text.RegularExpressions;
 
-namespace HttpDataServerProject4
+namespace Project_1c7
 {
     public class OcStoredProcedure
     {
         private static GlobalContext V77gc;
-
         private static Object thisLock = new Object();
-
         public static ResponsePackage Exec1(RequestPackage rqp, String V77CnString)
         {
             ResponsePackage rsp = new ResponsePackage();
@@ -256,6 +254,8 @@ namespace HttpDataServerProject4
                 }
                 Log.Write(String.Format("'{0}', '{1}', '{2}', '{3}', '{4}'", docDate, docNo, track, sDate, rDate));
                 // Пробуем найти Расходную.
+                //var Расходная = new Документ(V77gc.СоздатьОбъект("Документ.Расходная"));
+                //if (Расходная.НайтиПоНомеру(docNo, Convert.ToDateTime(docDate)) == 1)
                 Документ Расходная = null; // new Документ(V77gc.СоздатьОбъект("Документ.Расходная"));
                 var Расходные = new Документ(V77gc.СоздатьОбъект("Документ.Расходная"));
                 if (Расходные.ВыбратьДокументы(new DateTime(2018, 3, 1), new DateTime(2018, 12, 31)) == 1)
@@ -272,19 +272,19 @@ namespace HttpDataServerProject4
                 if (Расходная != null) //.НайтиПоНомеру(docNo, Convert.ToDateTime(docDate)) == 1)
                 {
                     // Расходная найдена.
-                    Console.WriteLine("Расходная найдена.");
+                    //Console.WriteLine("Расходная найдена.");
                     // Справочник Рыссылки
                     var Рассылки = new Справочник(V77gc.СоздатьОбъект("Справочник.Рассылки"));
                     if (Рассылки.НайтиПоРеквизиту("РасходнаяНакладная", Расходная, 1) == 0)
                     {
                         // Рассылка не найдена.
-                        Console.WriteLine("Рассылка не найдена.");
+                        //Console.WriteLine("Рассылка не найдена.");
                         Рассылки.Новый();
                         var rncd = Расходная.ТекущийДокумент();
                         Рассылки.УстановитьАтрибут("РасходнаяНакладная", rncd);
                     }
                     // Рассылка найдена или только-что создана.
-                    Console.WriteLine("Рассылка найдена или только-что создана.");
+                    //Console.WriteLine("Рассылка найдена или только-что создана.");
                     Рассылки.УстановитьАтрибут("Наименование", track);
                     DateTime d;
                     if ((!String.IsNullOrWhiteSpace(sDate)) && (DateTime.TryParse(sDate, out d)))
@@ -453,7 +453,7 @@ namespace HttpDataServerProject4
                 ", "01.05.2018", "Фарм-Сиб");
                 if (V77gc.Запрос.Выполнить(ТекстЗапроса) == 1)
                 {
-                    Console.WriteLine("Запрос выполнен.");
+                    //Console.WriteLine("Запрос выполнен.");
                     while (V77gc.Запрос.Группировка() == 1)
                     {
                         DataRow dr = dt.NewRow();
@@ -525,7 +525,7 @@ namespace HttpDataServerProject4
 
                 V77Расходная v77Расходная = null;
 
-                var Расходная = НайтиРасходнуюНакладнуюПоНомеру(НомерНакладной);
+                var Расходная = НайтиРасходнуюНакладнуюПоНомеруЗаПоследние3месяца(НомерНакладной);
                 if (Расходная != null)
                 {
                     Документ СчетФактура = null;
@@ -562,7 +562,7 @@ namespace HttpDataServerProject4
 
                     var РеестрЦенНаЖНЛВП = new Справочник(V77gc.СоздатьОбъект("Справочник.РеестрЦенНаЖНЛВП"));
                     var КоличествоСтрок = Convert.ToInt32(Расходная.КоличествоСтрок());
-                    Console.WriteLine("Количество строк табличной части: '{0}'", КоличествоСтрок);
+                    //Console.WriteLine("Количество строк табличной части: '{0}'", КоличествоСтрок);
                     if (КоличествоСтрок > 0)
                     {
                         for (int Номер = 1; Номер <= КоличествоСтрок; Номер++)
@@ -601,7 +601,7 @@ namespace HttpDataServerProject4
                 DataTable dt = rsp.Data.Tables.Add();
                 dt.Columns.Add("json", typeof(String));
                 dt.Rows.Add(JsonV2.ToString(v77Расходная));
-                Console.WriteLine(dt.Rows[0][0]);
+                //Console.WriteLine(dt.Rows[0][0]);
             }
             else { rsp.Status += "\nНе задан номер расходной накладной."; }
             return rsp;
@@ -621,7 +621,7 @@ namespace HttpDataServerProject4
                     Hashtable РасходнаяНакладная = null;
                     try
                     {
-                        РасходнаяНакладная = Nskd.JsonV3.Parse(json) as Hashtable;
+                        РасходнаяНакладная = JsonV3.Parse(json) as Hashtable;
                     }
                     catch (Exception) { }
                     if (РасходнаяНакладная != null)
@@ -890,8 +890,7 @@ namespace HttpDataServerProject4
             }
             return rsp;
         }
-        /// <summary>Ищет расходную накладную по номеру за последние 3 месяца.</summary>
-        private static Документ НайтиРасходнуюНакладнуюПоНомеру(String Номер)
+        private static Документ НайтиРасходнуюНакладнуюПоНомеруЗаПоследние3месяца(String Номер)
         {
             Документ Расходная = null;
             String ТекстЗапроса = String.Format(@"
