@@ -65,6 +65,7 @@ namespace HttpDataServerProject1
 
                 if (doCopy)
                 {
+                    CopyDeployDirToExecDir(@"C:\Lnetpub\DataService 1c7");
                     CopyDeployDirToExecDir(@"C:\Lnetpub\DataService 1c on port 11014");
                     CopyDeployDirToExecDir(@"C:\Lnetpub\DataService Sql on port 11012");
                     CopyDeployDirToExecDir(@"C:\Lnetpub\DataService Utilities on port 11009");
