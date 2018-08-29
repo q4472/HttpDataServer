@@ -45,11 +45,11 @@ namespace Project_1c7
                         case "ПолучитьСписокРасходныхНакладных":
                             rsp = ПолучитьСписокРасходныхНакладных();
                             break;
-                        case "ДобавитьПриходнуюНакладную":
-                            rsp = ДобавитьПриходнуюНакладную(rqp);
+                        case "ПолучитьИз1СФармСибРасходнуюНакладную":
+                            rsp = ПолучитьИз1СФармСибРасходнуюНакладную(rqp);
                             break;
-                        case "ПолучитьРасходнуюНакладную":
-                            rsp = ПолучитьРасходнуюНакладную(rqp);
+                        case "ДобавитьВ1СФКГарзаПриходнуюНакладную":
+                            rsp = ДобавитьВ1СФКГарзаПриходнуюНакладную(rqp);
                             break;
                         case "ПолучитьДоговорПоКоду":
                             rsp = ПолучитьДоговорПоКоду(rqp);
@@ -509,7 +509,7 @@ namespace Project_1c7
             rsp.Data.Tables.Add(dt);
             return rsp;
         }
-        private static ResponsePackage ПолучитьРасходнуюНакладную(RequestPackage rqp)
+        private static ResponsePackage ПолучитьИз1СФармСибРасходнуюНакладную(RequestPackage rqp)
         {
             ResponsePackage rsp = new ResponsePackage
             {
@@ -606,7 +606,7 @@ namespace Project_1c7
             else { rsp.Status += "\nНе задан номер расходной накладной."; }
             return rsp;
         }
-        private static ResponsePackage ДобавитьПриходнуюНакладную(RequestPackage rqp)
+        private static ResponsePackage ДобавитьВ1СФКГарзаПриходнуюНакладную(RequestPackage rqp)
         {
             ResponsePackage rsp = new ResponsePackage
             {
