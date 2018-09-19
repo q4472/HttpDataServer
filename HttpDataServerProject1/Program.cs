@@ -101,6 +101,7 @@ namespace HttpDataServerProject1
             KillProcesses("HttpDataServerProject14_1c7");
             KillProcesses("1cv7s");
             KillProcesses("Excel");
+            KillProcesses("Word");
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -210,7 +211,7 @@ namespace HttpDataServerProject1
             System.Diagnostics.Process pi = new System.Diagnostics.Process();
             pi.StartInfo.Domain = "sibdomain.ru";
             pi.StartInfo.UserName = "sokolov";
-            pi.StartInfo.Password = ReadPassword("1234562");
+            pi.StartInfo.Password = ReadPassword("1234563");
             pi.StartInfo.UseShellExecute = false;
             pi.StartInfo.Arguments = String.Join(" ", args);
 
@@ -243,6 +244,10 @@ namespace HttpDataServerProject1
             pi.StartInfo.FileName = @"C:\Lnetpub\DataService Sql on port 11002.exec\HttpDataServerProject2.exe";
             pi.Start();
             Thread.Sleep(100);
+            pi.StartInfo.FileName = @"C:\Lnetpub\Proxy on port 80.exec\MsServer.exe";
+            pi.Start();
+            Thread.Sleep(100);
+            pi.StartInfo.Arguments += " -p81";
             pi.StartInfo.FileName = @"C:\Lnetpub\Proxy on port 80.exec\MsServer.exe";
             pi.Start();
             Thread.Sleep(100);
