@@ -21,6 +21,7 @@ namespace HttpDataServerProject14
                 if (V77gc == null) { V77gc = new GlobalContext(V77CnString); }
                 if (V77gc != null && V77gc.ComObject != null)
                 {
+                    Log.Write(rqp.Command);
                     switch (rqp.Command)
                     {
                         case "Добавить":
@@ -43,9 +44,6 @@ namespace HttpDataServerProject14
                             break;
                         case "ПолучитьСписокПриходныхНакладных":
                             rsp = ПолучитьСписокПриходныхНакладных();
-                            break;
-                        case "ПолучитьСписокРасходныхНакладных":
-                            rsp = ПолучитьСписокРасходныхНакладных();
                             break;
                         case "ДобавитьПриходнуюНакладную":
                             rsp = ДобавитьПриходнуюНакладную(rqp);
@@ -442,17 +440,17 @@ namespace HttpDataServerProject14
             dt.Columns.Add("НомерТН", typeof(String));
             try
             {
-                var ТекстЗапроса = String.Format(@"
+                var ТекстЗапроса = $@"
                     Без итогов;
-                    Период с '{0}';
+                    Период с '{DateTime.Now.AddMonths(-3).ToString("dd.MM.yyyy")}';
                     ОбрабатыватьДокументы Все; 
                     НомерДок = Документ.Приходная.НомерДок;
                     ДатаДок = Документ.Приходная.ДатаДок;
                     КлиентНаименование = Документ.Приходная.Клиент.Наименование;
                     НомерТН = Документ.Приходная.НомерТН;
                     Группировка НомерДок Без групп;
-                    Условие(Найти(КлиентНаименование, ""{1}"") > 0);
-                ", "01.05.2018", "Фарм-Сиб");
+                    Условие(Найти(КлиентНаименование, ""Фарм-Сиб"") > 0);
+                ";
                 if (V77gc.Запрос.Выполнить(ТекстЗапроса) == 1)
                 {
                     Console.WriteLine("Запрос выполнен.");
@@ -473,42 +471,6 @@ namespace HttpDataServerProject14
                 }
             }
             catch (Exception e) { Console.WriteLine(e); }
-            return rsp;
-        }
-        private static ResponsePackage ПолучитьСписокРасходныхНакладных()
-        {
-            ResponsePackage rsp = new ResponsePackage();
-            DataTable dt = new DataTable("СписокРасходныхНакладных");
-            dt.Columns.Add("ДатаДок", typeof(DateTime));
-            dt.Columns.Add("НомерДок", typeof(String));
-            dt.Columns.Add("КлиентНаименование", typeof(String));
-            try
-            {
-                var ТекстЗапроса = String.Format(@"
-                    Без итогов;
-                    Период с '{0}';
-                    НомерДок = Документ.Расходная.НомерДок;
-                    ДатаДок = Документ.Расходная.ДатаДок;
-                    КлиентНаименование = Документ.Расходная.Клиент.Наименование;
-                    Группировка НомерДок Без групп;
-                    Условие(Найти(КлиентНаименование, ""{1}"") > 0);
-                ", "01.05.2018", "ФК ГАРЗА");
-                if (V77gc != null && V77gc.Запрос.Выполнить(ТекстЗапроса) == 1)
-                {
-                    //Console.WriteLine("Запрос выполнен.");
-                    while (V77gc.Запрос.Группировка() == 1)
-                    {
-                        DataRow dr = dt.NewRow();
-                        dt.Rows.Add(dr);
-                        dr["ДатаДок"] = V77gc.Запрос.ПолучитьАтрибут("ДатаДок");
-                        dr["НомерДок"] = ((String)V77gc.Запрос.ПолучитьАтрибут("НомерДок")).Trim();
-                        dr["КлиентНаименование"] = ((String)V77gc.Запрос.ПолучитьАтрибут("КлиентНаименование")).Trim();
-                    }
-                }
-            }
-            catch (Exception e) { Console.WriteLine(e); }
-            rsp.Data = new DataSet();
-            rsp.Data.Tables.Add(dt);
             return rsp;
         }
         private static ResponsePackage ПолучитьРасходнуюНакладную(RequestPackage rqp)
@@ -616,7 +578,13 @@ namespace HttpDataServerProject14
             };
             if (rqp != null)
             {
-                var json = rqp["РасходнаяНакладная"] as String;
+                String json = rqp["РасходнаяНакладная"] as String;
+                Double скидкаПоставщика = 0;
+                {
+                    Object temp = rqp["СкидкаПоставщика"];
+                    if (temp != null && temp.GetType() == typeof(Double)) { скидкаПоставщика = (Double)temp; }
+                }
+                Console.Write($"скидкаПоставщика: {скидкаПоставщика}");
                 if (!String.IsNullOrWhiteSpace(json))
                 {
                     //rsp.Status += "\n" + json;
