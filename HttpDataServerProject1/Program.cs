@@ -66,13 +66,13 @@ namespace HttpDataServerProject1
                 if (doCopy)
                 {
                     CopyDeployDirToExecDir(@"C:\Lnetpub\DataService 1c7");
-                    CopyDeployDirToExecDir(@"C:\Lnetpub\DataService 1c on port 11014");
+                    //CopyDeployDirToExecDir(@"C:\Lnetpub\DataService 1c on port 11014");
                     CopyDeployDirToExecDir(@"C:\Lnetpub\DataService Sql on port 11012");
                     CopyDeployDirToExecDir(@"C:\Lnetpub\DataService Utilities on port 11009");
                     CopyDeployDirToExecDir(@"C:\Lnetpub\Sssp"); // 11008
                     CopyDeployDirToExecDir(@"C:\Lnetpub\DataService Mail on port 11007");
                     CopyDeployDirToExecDir(@"C:\Lnetpub\DataService Fs on port 11005");
-                    CopyDeployDirToExecDir(@"C:\Lnetpub\DataService 1c on port 11004");
+                    //CopyDeployDirToExecDir(@"C:\Lnetpub\DataService 1c on port 11004");
                     CopyDeployDirToExecDir(@"C:\Lnetpub\DataService Excel on port 11003");
                     CopyDeployDirToExecDir(@"C:\Lnetpub\DataService Sql on port 11002");
                     CopyDeployDirToExecDir(@"C:\Lnetpub\Proxy on port 80");
@@ -92,13 +92,14 @@ namespace HttpDataServerProject1
             KillProcesses("MsServer");
             KillProcesses("HttpDataServerProject2");
             KillProcesses("HttpDataServerProject3");
-            KillProcesses("HttpDataServerProject4");
+            //KillProcesses("HttpDataServerProject4");
             KillProcesses("HttpDataServerProject5");
             KillProcesses("HttpDataServerProject7");
             KillProcesses("HttpDataServerProject8");
             KillProcesses("HttpDataServices"); // Project9
             KillProcesses("Project12_SqlServer");
-            KillProcesses("HttpDataServerProject14_1c7");
+            //KillProcesses("HttpDataServerProject14_1c7");
+            KillProcesses("Project_1c7");
             KillProcesses("1cv7s");
             KillProcesses("Excel");
             KillProcesses("Word");
@@ -213,13 +214,25 @@ namespace HttpDataServerProject1
             pi.StartInfo.UserName = "sokolov";
             pi.StartInfo.Password = ReadPassword("1234564");
             pi.StartInfo.UseShellExecute = false;
-            pi.StartInfo.Arguments = String.Join(" ", args);
+            String StartInfoArguments = String.Join(" ", args);
 
             Console.WriteLine(pi.StartInfo.Arguments);
 
-            pi.StartInfo.FileName = @"C:\Lnetpub\DataService 1c on port 11014.exec\HttpDataServerProject14_1c7.exe";
+            pi.StartInfo.Arguments = @"1cd=""\\SRV-TS2\dbase_1c$\Фармацея Фарм-Сиб"" 1cn=""Соколов_Евгенй_клиент_2"" 1cp=""yNFxfrvqxP"" port=11004";
+            pi.StartInfo.FileName = @"C:\Lnetpub\DataService 1c7.exec\Project_1c7.exe";
             pi.Start();
             Thread.Sleep(100);
+
+            pi.StartInfo.Arguments = @"1cd=""\\SRV-TS2\dbase_1c$\ФК_Гарза"" 1cn=""Соколов_Евгенй_клиент_2"" 1cp=""yNFxfrvqxP"" port=11014";
+            pi.StartInfo.FileName = @"C:\Lnetpub\DataService 1c7.exec\Project_1c7.exe";
+            pi.Start();
+            Thread.Sleep(100);
+
+            pi.StartInfo.Arguments = StartInfoArguments;
+
+            //pi.StartInfo.FileName = @"C:\Lnetpub\DataService 1c on port 11014.exec\HttpDataServerProject14_1c7.exe";
+            //pi.Start();
+            //Thread.Sleep(100);
             pi.StartInfo.FileName = @"C:\Lnetpub\DataService Sql on port 11012.exec\Project12_SqlServer.exe";
             pi.Start();
             Thread.Sleep(100);
@@ -235,9 +248,9 @@ namespace HttpDataServerProject1
             pi.StartInfo.FileName = @"C:\Lnetpub\DataService Fs on port 11005.exec\HttpDataServerProject5.exe";
             pi.Start();
             Thread.Sleep(100);
-            pi.StartInfo.FileName = @"C:\Lnetpub\DataService 1c on port 11004.exec\HttpDataServerProject4.exe";
-            pi.Start();
-            Thread.Sleep(100);
+            //pi.StartInfo.FileName = @"C:\Lnetpub\DataService 1c on port 11004.exec\HttpDataServerProject4.exe";
+            //pi.Start();
+            //Thread.Sleep(100);
             pi.StartInfo.FileName = @"C:\Lnetpub\DataService Excel on port 11003.exec\HttpDataServerProject3.exe";
             pi.Start();
             Thread.Sleep(100);
