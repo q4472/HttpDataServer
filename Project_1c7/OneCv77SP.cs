@@ -614,7 +614,14 @@ namespace Project_1c7
             };
             if (rqp != null)
             {
-                var json = rqp["РасходнаяНакладная"] as String;
+                String json = rqp["РасходнаяНакладная"] as String;
+                Double discount = 0;
+                Object temp = rqp["СкидкаПоставщикаВПроцентах"];
+                if (temp != null && temp.GetType() == typeof(Double)) discount = (Double)temp;
+
+                //Log.Write($"СкидкаПоставщикаВПроцентах: {discount}");
+                //return rsp;
+
                 if (!String.IsNullOrWhiteSpace(json))
                 {
                     //rsp.Status += "\n" + json;
@@ -736,6 +743,7 @@ namespace Project_1c7
                             }
                         }
                         // табличная часть
+                        Double sum = 0;
                         if (РасходнаяНакладная.Contains("ТабличнаяЧасть"))
                         {
                             if (РасходнаяНакладная["ТабличнаяЧасть"] is DataTable ТабличнаяЧасть && ТабличнаяЧасть.Rows.Count > 0)
@@ -784,7 +792,9 @@ namespace Project_1c7
                                                 }
                                                 if (ТабличнаяЧасть.Columns.Contains("Всего") && dr["Всего"] != DBNull.Value)
                                                 {
-                                                    ДокументПриходная.УстановитьАтрибут("Всего", Convert.ToDouble(dr["Всего"], ic));
+                                                    Double rowTotal = Convert.ToDouble(dr["Всего"], ic);
+                                                    ДокументПриходная.УстановитьАтрибут("Всего", rowTotal);
+                                                    sum += rowTotal;
                                                 }
 
                                                 if (Серия.ContainsKey("ГоденДо"))
@@ -875,6 +885,10 @@ namespace Project_1c7
                                 Лаборатория.Dispose(); Лаборатория = null;
                                 Товары.Dispose(); Товары = null;
                             }
+                        }
+                        // продолжение шапки
+                        {
+                            ДокументПриходная.УстановитьАтрибут("СкидкаПоставщика", Math.Round((sum / 100) * discount, 2));
                         }
                         Маркетолог?.Dispose(); Маркетолог = null;
                         ТипДоставки?.Dispose(); ТипДоставки = null;
