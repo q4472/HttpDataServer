@@ -363,7 +363,6 @@ namespace HttpDataServerProject8
                                 case "Магергут":
                                 case "Скворцова":
                                 case "Лобанова":
-                                case "Подрезова":
                                     dAlias = "mag_dep";
                                     dPath = String.Format(@"\новые аукционы");
                                     try
@@ -388,6 +387,7 @@ namespace HttpDataServerProject8
                                     break;
                                 case "Завалова":
                                 case "Борисова":
+                                case "Подрезова":
                                     dAlias = "zav_dep";
                                     dPath = String.Format(@"\новые аукционы");
                                     try
