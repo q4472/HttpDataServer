@@ -8,13 +8,14 @@ namespace HttpDataServerProject1
 {
     class Program
     {
+        private static Boolean errorParsing = false;
+        private static Boolean doKill = false;
+        private static Boolean doCopy = false;
+        private static Boolean doStart = false;
+        private static Int32 port = 80;
+        private static String password = String.Empty;
         static void Main(String[] args)
         {
-            Boolean errorParsing = false;
-            Boolean doKill = false;
-            Boolean doCopy = false;
-            Boolean doStart = false;
-            Int32 port = 80;
             foreach (String arg in args)
             {
                 if (arg.Length < 2)
@@ -42,6 +43,13 @@ namespace HttpDataServerProject1
                             if (!Int32.TryParse(arg.Substring(2, arg.Length - 2), out port))
                             {
                                 errorParsing = true;
+                            }
+                            break;
+                        case "-w":
+                        case "/w":
+                            if (arg.Length > 2)
+                            {
+                                password = arg.Substring(2);
                             }
                             break;
                         default:
@@ -212,7 +220,7 @@ namespace HttpDataServerProject1
             System.Diagnostics.Process pi = new System.Diagnostics.Process();
             pi.StartInfo.Domain = "sibdomain.ru";
             pi.StartInfo.UserName = "sokolov";
-            pi.StartInfo.Password = ReadPassword("1234564");
+            pi.StartInfo.Password = ReadPassword(password);
             pi.StartInfo.UseShellExecute = false;
             String StartInfoArguments = String.Join(" ", args);
 
