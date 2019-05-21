@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
-using Word = Microsoft.Office.Interop.Word;
+//using Word = Microsoft.Office.Interop.Word;
 
 namespace Tests
 {
@@ -579,6 +579,7 @@ namespace Tests
         */
         private static void TestInterop()
         {
+            /*
             DataSet ds = new DataSet();
 
             String fileName = @"C:\Users\sokolov\Desktop\Заказы\ФОРМА ПРЕДЛОЖЕНИЯ УЧАСТНИКА ЗАКУПКИ- тест .docx";
@@ -652,6 +653,7 @@ namespace Tests
                     }
                 }
             }
+            */
         }
         class Mnn
         {
