@@ -60,7 +60,7 @@ namespace HttpDataServerProject31
 
             // Файл куда будем выгружать
             String now = DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss");
-            String fileName = @"\\SRV-TS2\work\Реестры договоров\Выгрузка\Выгрузка за " + year + " год " + now + ".xlsx";
+            String fileName = @"\\SRV-TS2\work\Реестры договоров\Выгрузка\Выгрузка за " + year + " год ФС " + now + ".xlsx";
 
             // Таблица которую будем выгружать
             DataTable dt = new DataTable();
@@ -70,7 +70,7 @@ namespace HttpDataServerProject31
                 "select " +
                 " [f0], [f1], [f2], [f3], [f4], [f5], [f6], [f7], [f8], [f9], " +
                 " [f10], [f11], [f12], [f13], [f14], [f15], [f16] " +
-                "from [dbo].[договоры 15 16 17] " +
+                "from [dbo].[договоры] " +
                 "where (len([f2]) > 3) and ([f2] like N'%-" + year.Substring(2) + "') " +
                 "order by [num];";
             SqlDataAdapter da = new SqlDataAdapter(sql, cn);
@@ -83,7 +83,29 @@ namespace HttpDataServerProject31
                 dt.Columns[columnName].Caption = caption;
             }
 
-            // Выгружаем
+            // Выгружаем ФС
+            status = OleExcel.DataTableToExcelFile(dt, fileName);
+
+            fileName = @"\\SRV-TS2\work\Реестры договоров\Выгрузка\Выгрузка за " + year + " год ГЗ " + now + ".xlsx";
+
+            sql = "" +
+                "select " +
+                " [f0], [f1], [f2], [f3], [f4], [f5], [f6], [f7], [f8], [f9], " +
+                " [f10], [f11], [f12], [f13], [f14], [f15], [f16] " +
+                "from [dbo].[договоры_1] " +
+                "where (len([f2]) > 3) and ([f2] like N'%-" + year.Substring(2) + "') " +
+                "order by [num];";
+            da = new SqlDataAdapter(sql, cn);
+            da.Fill(dt);
+            dt.TableName = "[договоры_покупатели_" + year + "]";
+            for (int fi = 0; fi < md.Length; fi++)
+            {
+                String columnName = ((String[])md[fi])[0];
+                String caption = ((String[])md[fi])[1];
+                dt.Columns[columnName].Caption = caption;
+            }
+
+            // Выгружаем ГЗ
             status = OleExcel.DataTableToExcelFile(dt, fileName);
 
             return status;
