@@ -62,8 +62,6 @@ namespace HttpDataServerProject31
             String now = DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss");
             String fileName = @"\\SRV-TS2\work\Реестры договоров\Выгрузка\Выгрузка за " + year + " год ФС " + now + ".xlsx";
 
-            // Таблица которую будем выгружать
-            DataTable dt = new DataTable();
             String connectionstring = String.Format("Data Source={0};Initial Catalog=Pharm-Sib;Integrated Security=True", MainSqlServerDataSource);
             SqlConnection cn = new SqlConnection(connectionstring);
             String sql = "" +
@@ -74,6 +72,8 @@ namespace HttpDataServerProject31
                 "where (len([f2]) > 3) and ([f2] like N'%-" + year.Substring(2) + "') " +
                 "order by [num];";
             SqlDataAdapter da = new SqlDataAdapter(sql, cn);
+            // Таблица которую будем выгружать
+            DataTable dt = new DataTable();
             da.Fill(dt);
             dt.TableName = "[договоры_покупатели_" + year + "]";
             for (int fi = 0; fi < md.Length; fi++)
@@ -85,9 +85,7 @@ namespace HttpDataServerProject31
 
             // Выгружаем ФС
             status = OleExcel.DataTableToExcelFile(dt, fileName);
-
             fileName = @"\\SRV-TS2\work\Реестры договоров\Выгрузка\Выгрузка за " + year + " год ГЗ " + now + ".xlsx";
-
             sql = "" +
                 "select " +
                 " [f0], [f1], [f2], [f3], [f4], [f5], [f6], [f7], [f8], [f9], " +
@@ -96,6 +94,7 @@ namespace HttpDataServerProject31
                 "where (len([f2]) > 3) and ([f2] like N'%-" + year.Substring(2) + "') " +
                 "order by [num];";
             da = new SqlDataAdapter(sql, cn);
+            dt = new DataTable();
             da.Fill(dt);
             dt.TableName = "[договоры_покупатели_" + year + "]";
             for (int fi = 0; fi < md.Length; fi++)
