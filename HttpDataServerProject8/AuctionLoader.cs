@@ -162,35 +162,39 @@ namespace HttpDataServerProject8
             }
             return htmlDivFinishIndex;
         }
-        private static String BuildQueryStringForRegion(String regionNumber, String publishDate, String searchString, Regex re, Int32 recordsPerPage = 50, Int32 pageNumber = 1)
+        private static String BuildQueryStringForRegion(String regionNumber, String publishDate, String searchString, Int32 recordsPerPage = 50, Int32 pageNumber = 1)
         {
             publishDate = String.Format("{0}.{1}.20{2}", publishDate.Substring(0, 2), publishDate.Substring(3, 2), publishDate.Substring(6, 2));
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("searchString={0}", HttpUtility.UrlEncode(searchString));
+            sb.Append("&morphology=on");
             sb.AppendFormat("&pageNumber={0}", pageNumber);
-            sb.Append("&sortDirection=false");
+            //sb.Append("&sortDirection=false");
             sb.AppendFormat("&recordsPerPage=_{0}", recordsPerPage);
             sb.Append("&showLotsInfoHidden=false");
-            if (re.ToString().Contains("19")) { sb.Append("&fz44=on"); }
-            if (re.ToString().Contains("11")) { sb.Append("&fz223=on"); }
+            sb.Append("&fz44=on");
+            sb.Append("&fz223=on");
+            sb.Append("&sortBy=UPDATE_DATE");
             sb.Append("&af=on");
             sb.Append("&ca=on");
             //sb.Append("&pc=on"); // закупка завершена
-            sb.Append("&priceFrom=");
-            sb.Append("&priceTo=");
-            sb.Append("&currencyId=1");
-            sb.Append("&agencyTitle=");
-            sb.Append("&agencyCode=");
-            sb.Append("&agencyFz94id=");
-            sb.Append("&agencyFz223id=");
-            sb.Append("&agencyInn=");
-            sb.AppendFormat("&region_regions_{0}=region_regions_{0}", regionNumber);
-            sb.AppendFormat("&regions={0}", regionNumber);
+            //sb.Append("&priceFrom=");
+            //sb.Append("&priceTo=");
+            //sb.Append("&currencyId=1");
+            //sb.Append("&agencyTitle=");
+            //sb.Append("&agencyCode=");
+            //sb.Append("&agencyFz94id=");
+            //sb.Append("&agencyFz223id=");
+            //sb.Append("&agencyInn=");
+            //sb.AppendFormat("&region_regions_{0}=region_regions_{0}", regionNumber);
+            //sb.AppendFormat("&regions={0}", regionNumber);
             sb.AppendFormat("&publishDateFrom={0}", publishDate);
             sb.AppendFormat("&publishDateTo={0}", publishDate);
-            sb.Append("&sortBy=UPDATE_DATE");
-            sb.Append("&updateDateFrom=");
-            sb.Append("&updateDateTo=");
+            sb.Append("&currencyIdGeneral=-1");
+            //sb.Append("&updateDateFrom=");
+            //sb.Append("&updateDateTo=");
+            sb.Append("&customerPlaceWithNested=on");
+            sb.AppendFormat("&customerPlace={0}", regionNumber);
             return sb.ToString();
         }
         public static ResponsePackage LoadAuctionNumbers(RequestPackage rqp)
@@ -208,55 +212,40 @@ namespace HttpDataServerProject8
                     rsp.Data = new DataSet();
                     rsp.Data.Tables.Add();
                     rsp.Data.Tables[0].Columns.Add("auction_number", typeof(String));
+                    rsp.Data.Tables[0].Columns.Add("auction_href", typeof(String));
 
                     List<String> auctionNumbers = new List<string>();
 
-                    Regex re44 = new Regex(@"№ (\d{19})\D?");
-                    Regex re223 = new Regex(@"№ (\d{11})\D?");
                     UriBuilder ub = new UriBuilder
                     {
                         Scheme = "http",
                         Host = "zakupki.gov.ru",
-                        Path = "/epz/order/quicksearch/search_eis.html"
+                        Path = "/epz/order/extendedsearch/results.html"
                     };
                     String[] ss = new String[] { "лекарств", "препарат", "медикамент" };
-                    Int32 recordsPerPage = 50;
-                    Int32 pageCount = 1;
-                    foreach (Regex re in new Regex[] { re44, re223 })
+                    foreach (String s in ss)
                     {
-                        foreach (String s in ss)
+                        Int32 recordsPerPage = 50;
+                        Int32 pageCount = 1;
+                        Int32 pageNumber = 0;
+                        while (pageNumber++ < pageCount)
                         {
-                            Int32 pageNumber = 0;
-                            while (pageNumber++ < pageCount)
+                            ub.Query = BuildQueryStringForRegion(regionNumber, publishDate, s, recordsPerPage, pageNumber);
+                            String receivedString = Utilities.GetResponse(ub.Uri);
+                            if (!String.IsNullOrWhiteSpace(receivedString))
                             {
-                                ub.Query = BuildQueryStringForRegion(regionNumber, publishDate, s, re, recordsPerPage, pageNumber);
-                                String receivedString = Utilities.GetResponse(ub.Uri);
-
-                                if (!String.IsNullOrWhiteSpace(receivedString))
+                                // найти количество записей в ответе
+                                Int32 recordCount = GetRecordCount(receivedString);
+                                if (pageNumber == 1)
                                 {
-                                    // найти количество записей в ответе
-                                    Int32 recordCount = GetRecordCount(receivedString);
-                                    if (pageNumber == 1)
-                                    {
-                                        pageCount = (recordCount / recordsPerPage) + 1;
-                                    }
-
-                                    MatchCollection ms = re.Matches(receivedString);
-                                    foreach (Match m in ms)
-                                    {
-                                        if (m.Groups.Count > 1)
-                                        {
-                                            String value = m.Groups[1].Value;
-                                            if (!String.IsNullOrWhiteSpace(value))
-                                            {
-                                                if (!auctionNumbers.Contains(value))
-                                                {
-                                                    auctionNumbers.Add(value);
-                                                    rsp.Data.Tables[0].Rows.Add(new object[] { value });
-                                                }
-                                            }
-                                        }
-                                    }
+                                    pageCount = (recordCount / recordsPerPage) + 1;
+                                }
+                                List<String> hrefs = GetRecordHrefList(receivedString);
+                                foreach (String href in hrefs)
+                                {
+                                    Int32 si = href.IndexOf("regNumber=") + 10;
+                                    String num = href.Substring(si);
+                                    rsp.Data.Tables[0].Rows.Add(new Object[] { num, href });
                                 }
                             }
                         }
@@ -268,7 +257,7 @@ namespace HttpDataServerProject8
         private static Int32 GetRecordCount(String receivedString)
         {
             Int32 recordCount = 0;
-            Int32 sIndex = receivedString.IndexOf("Всего записей");
+            Int32 sIndex = receivedString.IndexOf("search-results__total");
             if (sIndex >= 0)
             {
                 String temp = receivedString.Substring(sIndex, 100);
@@ -278,18 +267,37 @@ namespace HttpDataServerProject8
             }
             return recordCount;
         }
+        private static List<String> GetRecordHrefList(String s)
+        {
+            List<String> hrefs = new List<string>();
+            if (!String.IsNullOrWhiteSpace(s))
+            {
+                Int32 sIndex = 0;
+                while (true)
+                {
+                    SectionIndexes sIs = new SectionIndexes(s, new String[] { "registry-entry__header-mid__number", "<a", "href=\"" }, sIndex, new string[] { "\"" });
+                    String v = sIs.InnerText;
+                    if (!String.IsNullOrWhiteSpace(v))
+                    {
+                        hrefs.Add(v);
+                        sIndex = sIs.Index3;
+                        continue;
+                    }
+                    break;
+                }
+            }
+            return hrefs;
+        }
     }
     class Fz44
     {
         public static Guid SaveAuctionInf(String html)
         {
-            Guid aUid = new Guid();
-
             // записываем на SQL сервер в базу Auctions общую информацию о заявке
-            aUid = ParseAndSaveAuction44fzCommonInf(html);
+            Guid aUid = ParseAndSaveAuction44fzCommonInf(html);
 
             // записываем на SQL сервер в базу Auctions информацию о заказчиках (их может быть несколько)
-            ParseAndSaveAuction44FzCustomerRequirement(aUid, html);
+            //ParseAndSaveAuction44FzCustomerRequirement(aUid, html);
 
             return aUid;
         }
@@ -298,71 +306,83 @@ namespace HttpDataServerProject8
             Guid aUid = new Guid();
 
             // берём основные блоки
-
+            Int32 c0 = new SectionIndexes(html, new String[] { "cardWrapper" }).Index1;
             // заявка
-            Int32 h0 = new SectionIndexes(html, new String[] { "cardHeader", ">" }).Index1;
+            Int32 h0 = new SectionIndexes(html, new String[] { "cardMainInfo" }, c0).Index1;
             // общая_информация_о_закупке
-            Int32 contentTabBoxBlock = new SectionIndexes(html, new String[] { "contentTabBoxBlock", ">" }, h0).Index1;
-            // общая_информация_о_закупке
-            Int32 t0 = new SectionIndexes(html, new String[] { "Общая информация", "<table", ">" }, contentTabBoxBlock).Index1;
+            Int32 t0 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Общая информация о закупке", "</span>" }, c0).Index1;
             // информация_об_организации_осуществляющей_определение_поставщика
-            Int32 t1 = new SectionIndexes(html, new String[] { "Информация об организации", "<table", ">" }, contentTabBoxBlock).Index1;
+            Int32 t1 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Контактная информация", "</span>" }, c0).Index1;
             // информация_о_процедуре_закупки
-            Int32 t2 = new SectionIndexes(html, new String[] { "Информация о процедуре", "<table", ">" }, contentTabBoxBlock).Index1;
+            Int32 t2 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Информация о процедуре электронного аукциона", "</span>" }, c0).Index1;
             // начальная_максимальная_цена_контракта
-            Int32 t3 = new SectionIndexes(html, new String[] { "Начальная (максимальная)", "<table", ">" }, contentTabBoxBlock).Index1;
+            Int32 t3 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Начальная (максимальная) цена контракта", "</span>" }, c0).Index1;
             // информация_об_объекте_закупки
-            Int32 t4 = new SectionIndexes(html, new String[] { "Информация об объекте", "<table", ">" }, contentTabBoxBlock).Index1;
+            Int32 t4 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Информация об объекте закупки", "</span>" }, c0).Index1;
             // преимущества_требования_к_участникам
-            Int32 t5 = new SectionIndexes(html, new String[] { "Преимущества, требования", "<table", ">" }, contentTabBoxBlock).Index1;
+            Int32 t5 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Преимущества, требования к участникам", "</span>" }, c0).Index1;
+            //
+            Int32 t6 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Документация об электронном аукционе", "</span>" }, c0).Index1;
+            //
+            Int32 t7 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Обеспечение заявки", "</span>" }, c0).Index1;
+            //
+            Int32 t8 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Условия контракта", "</span>" }, c0).Index1;
+            //
+            Int32 t9 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Обеспечение исполнения контракта", "</span>" }, c0).Index1;
+            //
+            Int32 t10 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Обеспечение гарантийных обязательств", "</span>" }, c0).Index1;
+            //
+            Int32 t11 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Информация о банковском и (или) казначейском сопровождении контракта", "</span>" }, c0).Index1;
+
+            // записываем на SQL сервер в базу Auctions общую информацию о заявке
 
             Object[][] md44 = new Object[][] { 
                 // закупка
-                new Object[] { "номер",                                         h0, new String[] { "Закупка №" },                                           new String[] { "\n" } },
-                new Object[] { "дата_размещения",                               h0, new String[] { "Размещено:" },                                          new String[] { "</div>" } },
-                new Object[] { "кооператив",                                    h0, new String[] { "cooperative" },                                         null, "1" },
+                new Object[] { "номер",                                         h0, new String[] { ">№ " },                                                                 new String[] { "<" } },
+                new Object[] { "дата_размещения",                               h0, new String[] { "Размещено" },                                                           new String[] { "</div>" } },
+                new Object[] { "кооператив",                                    h0, new String[] { "cooperative" },                                                         null, "1" },
                 // общая_информация_о_закупке
-                new Object[] { "способ_определения_поставщика",                 t0, new String[] { "Способ определения поставщика", "<td", ">" },           new String[] { "</td>" } },
-                new Object[] { "наименование_электронной_площадки_в_интернете", t0, new String[] { "Наименование электронной площадки", "<td", ">" },       new String[] { "</td>" } },
-                new Object[] { "адрес_электронной_площадки_в_интернете",        t0, new String[] { "Адрес электронной площадки", "<td", ">", "<a", ">" },   new String[] { "</a>" } },
-                new Object[] { "размещение_осуществляет",                       t0, new String[] { "Размещение осуществляет", "<td", ">" },                 new String[] { "</td>" } },
-                new Object[] { "объект_закупки",                                t0, new String[] { "Наименование объекта закупки", "<td", ">" },            new String[] { "</td>" } },
-                new Object[] { "этап_закупки",                                  t0, new String[] { "Этап закупки", "<td", ">" },                            new String[] { "</td>" } },
-                new Object[] { "сведения_о_связи_с_позицией_плана_графика",     t0, new String[] { "Сведения о связи", "<td", ">" },                        new String[] { "</td>" } },
-                new Object[] { "номер_типового_контракта",                      t0, new String[] { "Номер типового контракта", "<td", ">" },                new String[] { "</td>" } },
-                new Object[] { "дата_и_время_окончания_подачи_заявок",          t0, new String[] { "Дата и время окончания срока подачи", "<td", ">" },     new String[] { "</td>" } },
+                new Object[] { "способ_определения_поставщика",                 t0, new String[] { "section", "span", "Способ определения поставщика", "</span>" },         new String[] { "</section>" } },
+                new Object[] { "наименование_электронной_площадки_в_интернете", t0, new String[] { "section", "span", "Наименование электронной площадки", "</span>" },     new String[] { "</section>" } },
+                new Object[] { "адрес_электронной_площадки_в_интернете",        t0, new String[] { "section", "span", "Адрес электронной площадки", "</span>", "<a", ">" }, new String[] { "</section>" } },
+                new Object[] { "размещение_осуществляет",                       t0, new String[] { "section", "span", "Размещение осуществляет", "</span>", "<a", ">" },    new String[] { "</section>" } },
+                new Object[] { "объект_закупки",                                t0, new String[] { "section", "span", "Наименование объекта закупки", "</span>" },          new String[] { "</section>" } },
+                new Object[] { "этап_закупки",                                  t0, new String[] { "section", "span", "Этап закупки", "</span>" },                          new String[] { "</section>" } },
+                new Object[] { "сведения_о_связи_с_позицией_плана_графика",     t0, new String[] { "section", "span", "Сведения о связи", "</span>" },                      new String[] { "</section>" } },
+                new Object[] { "номер_типового_контракта",                      t0, new String[] { "section", "span", "Номер типового контракта", "</span>" },              new String[] { "</section>" } },
+                new Object[] { "дата_и_время_окончания_подачи_заявок",          t0, new String[] { "section", "span", "Дата и время окончания срока подачи", "</span>" },   new String[] { "</section>" } },
                 // информация_об_организации_осуществляющей_определение_поставщика
-                new Object[] { "организация_осуществляющая_размещение",         t1, new String[] { "Организация, осуществляющая размещение", "<td", ">" },  new String[] { "</td>" } },
-                new Object[] { "почтовый_адрес",                                t1, new String[] { "Почтовый адрес", "<td", ">" },                          new String[] { "</td>" } },
-                new Object[] { "место_нахождения",                              t1, new String[] { "Место нахождения", "<td", ">" },                        new String[] { "</td>" } },
-                new Object[] { "ответственное_должностное_лицо",                t1, new String[] { "Ответственное должностное лицо", "<td", ">" },          new String[] { "</td>" } },
-                new Object[] { "адрес_электронной_почты",                       t1, new String[] { "Адрес электронной почты", "<td", ">" },                 new String[] { "</td>" } },
-                new Object[] { "номер_контактного_телефона",                    t1, new String[] { "Номер контактного телефона", "<td", ">" },              new String[] { "</td>" } },
-                new Object[] { "факс",                                          t1, new String[] { "Факс", "<td", ">" },                                    new String[] { "</td>" } },
-                new Object[] { "дополнительная_информация",                     t1, new String[] { "Дополнительная информация", "<td", ">" },               new String[] { "</td>" } },
+                new Object[] { "организация_осуществляющая_размещение",         t1, new String[] { "section", "span", "Организация, осуществляющая размещение", "</span>" },new String[] { "</section>" } },
+                new Object[] { "почтовый_адрес",                                t1, new String[] { "section", "span", "Почтовый адрес", "</span>" },                        new String[] { "</section>" } },
+                new Object[] { "место_нахождения",                              t1, new String[] { "section", "span", "Место нахождения", "</span>" },                      new String[] { "</section>" } },
+                new Object[] { "ответственное_должностное_лицо",                t1, new String[] { "section", "span", "Ответственное должностное лицо", "</span>" },        new String[] { "</section>" } },
+                new Object[] { "адрес_электронной_почты",                       t1, new String[] { "section", "span", "Адрес электронной почты", "</span>" },               new String[] { "</section>" } },
+                new Object[] { "номер_контактного_телефона",                    t1, new String[] { "section", "span", "Номер контактного телефона", "</span>" },            new String[] { "</section>" } },
+                new Object[] { "факс",                                          t1, new String[] { "section", "span", "Факс", "</span>" },                                  new String[] { "</section>" } },
+                new Object[] { "дополнительная_информация",                     t1, new String[] { "section", "span", "Дополнительная информация", "</span>" },             new String[] { "</section>" } },
                 // информация_о_процедуре_закупки
-                new Object[] { "дата_и_время_начала_подачи_заявок",             t2, new String[] { "Дата и время начала подачи", "<td", ">" },              new String[] { "</td>" } },
-                new Object[] { "дата_и_время_окончания_подачи_заявок",          t2, new String[] { "Дата и время окончания подачи", "<td", ">" },           new String[] { "</td>" } },
-                new Object[] { "место_подачи_заявок",                           t2, new String[] { "Место подачи заявок", "<td", ">" },                     new String[] { "</td>" } },
-                new Object[] { "порядок_подачи_заявок",                         t2, new String[] { "Порядок подачи заявок", "<td", ">" },                   new String[] { "</td>" } },
-                new Object[] { "дата_окончания_срока_рассмотрения_первых_частей", t2, new String[] { "Дата окончания срока", "<td", ">" },                  new String[] { "</td>" } },
-                new Object[] { "дата_проведения_аукциона_в_электронной_форме",  t2, new String[] { "Дата проведения", "<td", ">" },                         new String[] { "</td>" } },
-                new Object[] { "время_проведения_аукциона",                     t2, new String[] { "Время проведения", "<td", ">" },                        new String[] { "</td>" } },
-                new Object[] { "дополнительная_информация2",                    t2, new String[] { "Дополнительная информация", "<td", ">" },               new String[] { "</td>" } },
+                new Object[] { "дата_и_время_начала_подачи_заявок",             t2, new String[] { "section", "span", "Дата и время начала подачи", "</span>" },            new String[] { "</section>" } },
+                new Object[] { "дата_и_время_окончания_подачи_заявок",          t2, new String[] { "section", "span", "Дата и время окончания подачи", "</span>" },         new String[] { "</section>" } },
+                new Object[] { "место_подачи_заявок",                           t2, new String[] { "section", "span", "Место подачи заявок", "</span>" },                   new String[] { "</section>" } },
+                new Object[] { "порядок_подачи_заявок",                         t2, new String[] { "section", "span", "Порядок подачи заявок", "</span>" },                 new String[] { "</section>" } },
+                new Object[] { "дата_окончания_срока_рассмотрения_первых_частей",t2,new String[] { "section", "span", "Дата окончания срока", "</span>" },                  new String[] { "</section>" } },
+                new Object[] { "дата_проведения_аукциона_в_электронной_форме",  t2, new String[] { "section", "span", "Дата проведения", "</span>" },                       new String[] { "</section>" } },
+                new Object[] { "время_проведения_аукциона",                     t2, new String[] { "section", "span", "Время проведения", "</span>" },                      new String[] { "</section>" } },
+                new Object[] { "дополнительная_информация2",                    t2, new String[] { "section", "span", "Дополнительная информация", "</span>" },             new String[] { "</section>" } },
                 // начальная_максимальная_цена_контракта
-                new Object[] { "начальная_максимальная_цена_контракта",         t3, new String[] { "Начальная (максимальная) цена", "<td", ">" },           new String[] { "</td>" } },
-                new Object[] { "валюта",                                        t3, new String[] { "Валюта", "<td", ">" },                                  new String[] { "</td>" } },
-                new Object[] { "источник_финансирования",                       t3, new String[] { "Источник финансирования", "<td", ">" },                 new String[] { "</td>" } },
-                new Object[] { "идентификационный_код_закупки",                 t3, new String[] { "Идентификационный код закупки", "<td", ">" },           new String[] { "</td>" } },
-                new Object[] { "оплата_исполнения_контракта_по_годам",          t3, new String[] { "Оплата исполнения контракта", "<td", ">" },             new String[] { "</td>" } }, // @"../div[contains(@class, 'addingTbl')]/table//tr[1]/td[2]"
+                new Object[] { "начальная_максимальная_цена_контракта",         t3, new String[] { "section", "span", "Начальная (максимальная) цена", "</span>" },         new String[] { "</section>" } },
+                new Object[] { "валюта",                                        t3, new String[] { "section", "span", "Валюта", "</span>" },                                new String[] { "</section>" } },
+                new Object[] { "источник_финансирования",                       t3, new String[] { "section", "span", "Источник финансирования", "</span>" },               new String[] { "</section>" } },
+                new Object[] { "идентификационный_код_закупки",                 t3, new String[] { "section", "span", "Идентификационный код закупки", "</span>" },         new String[] { "</section>" } },
+                new Object[] { "оплата_исполнения_контракта_по_годам",          t3, new String[] { "section", "span", "Оплата исполнения контракта", "</span>" },           new String[] { "</section>" } },
                 // информация_об_объекте_закупки
-                new Object[] { "описание_объекта_закупки",                      t4, new String[] { "Описание объекта закупки" },                            new String[] { "</td>" } },
-                new Object[] { "условия_запреты_и_ограничения_допуска_товаров", t4, new String[] { "Условия", "запреты", "ограничения", "<td", ">" },       new String[] { "</td>" } },
-                new Object[] { "табличная_часть_в_формате_html",                t4, new String[] { "Табличная часть", "html", "<td", ">" },                 new String[] { "</td>" } },
+                new Object[] { "описание_объекта_закупки",                      t4, new String[] { "section", "span", "Описание объекта закупки", "</span>" },              new String[] { "</section>" } },
+                new Object[] { "условия_запреты_и_ограничения_допуска_товаров", t4, new String[] { "section", "span", "Условия", "запреты", "ограничения", "</span>" },     new String[] { "</section>" } },
+                new Object[] { "табличная_часть_в_формате_html",                t4, new String[] { "section", "span", "Табличная часть", "</span>" },                       new String[] { "</section>" } },
                 // преимущества_требования_к_участникам
-                new Object[] { "преимущества",                                  t5, new String[] { "Преимущества", "<td", ">" },                            new String[] { "</td>" } },
-                new Object[] { "требования",                                    t5, new String[] { "Требования", "<td", ">" },                              new String[] { "</td>" } },
-                new Object[] { "ограничения",                                   t5, new String[] { "Ограничения", "<td", ">" },                             new String[] { "</td>" } }
+                new Object[] { "преимущества",                                  t5, new String[] { "section", "span", "Преимущества", "</span>" },                          new String[] { "</section>" } },
+                new Object[] { "требования",                                    t5, new String[] { "section", "span", "Требования", "</span>" },                            new String[] { "</section>" } },
+                new Object[] { "ограничения",                                   t5, new String[] { "section", "span", "Ограничения", "</span>" },                           new String[] { "</section>" } }
             };
 
             SqlCommand cmd = new SqlCommand
@@ -380,7 +400,7 @@ namespace HttpDataServerProject8
                     sect = new SectionIndexes(html, (String[])p[2], (Int32)p[1], (String[])p[3]);
                     v = sect.InnerText;
                 }
-                else
+                else // cooperative
                 {
                     sect = new SectionIndexes(html, (String[])p[2]);
                     if (sect.HeadIsFound) v = (String)p[4];
@@ -402,14 +422,31 @@ namespace HttpDataServerProject8
                 if (o != null && o.GetType() == typeof(Guid)) { aUid = (Guid)o; }
             }
 
-            return aUid;
-        }
-        private static void ParseAndSaveAuction44FzCustomerRequirement(Guid aUid, String html)
-        {
+
+
+            // записываем на SQL сервер в базу Auctions информацию о заказчиках (их может быть несколько)
+
             // здесь может быть два варианта
             // первый - когда списки expand пусты - сохраняем из основного блока
             // второй - сохраняем из списков
 
+            // первый вариант
+            SqlCommand cmd1 = new SqlCommand
+            {
+                Connection = new SqlConnection(Env.cnString),
+                CommandText = "[Auctions].[dbo].[save_customer_requirement]",
+                CommandType = CommandType.StoredProcedure
+            };
+            cmd1.Parameters.AddWithValue("закупка_uid", aUid);
+            cmd1.Parameters.AddWithValue("наименование_заказчика", cmd.Parameters["размещение_осуществляет"].Value);
+            using (cmd1.Connection)
+            {
+                cmd1.Connection.Open();
+                cmd1.ExecuteScalar();
+            }
+
+
+            /*
             Object[][] mdCust = new Object[][] {
                 // требования_заказчика
                 new Object[] { "наименование_заказчика",                    0, new String[] { "&nbsp;" },                                                       new String[] { "</h3>" } },
@@ -427,20 +464,12 @@ namespace HttpDataServerProject8
                 new Object[] { "порядок_предоставления_обеспечения",        0, new String[] { "Обеспечение исполнения", "Порядок предоставления", "<td", ">" }, new String[] { "</td>" } },
                 new Object[] { "платежные_реквизиты_2",                     0, new String[] { "Обеспечение исполнения", "Платежные реквизиты", "<td", ">" },    new String[] { "</td>" } },
             };
-
+            
             Int32 bi = new SectionIndexes(html, new String[] { "Требования заказчиков" }).Index1;
 
             var sect = new SectionIndexes(html, new String[] { "Требования заказчика" }, bi);
             if (!sect.HeadIsFound)
             {
-                // первый вариант
-                SqlCommand cmd = new SqlCommand
-                {
-                    Connection = new SqlConnection(Env.cnString),
-                    CommandText = "[Auctions].[dbo].[save_customer_requirement]",
-                    CommandType = CommandType.StoredProcedure
-                };
-                cmd.Parameters.AddWithValue("закупка_uid", aUid);
                 String v;
                 foreach (Object[] p in mdCust)
                 {
@@ -460,13 +489,6 @@ namespace HttpDataServerProject8
                     v = Utilities.NormString(v);
                     if (cmd.Parameters.Contains("наименование_заказчика")) cmd.Parameters["наименование_заказчика"].Value = v;
                     else cmd.Parameters.AddWithValue("наименование_заказчика", v);
-                }
-                using (cmd.Connection)
-                {
-                    Object o = null;
-                    cmd.Connection.Open();
-                    o = cmd.ExecuteScalar();
-                    if (o != null && o.GetType() == typeof(Guid)) { aUid = (Guid)o; }
                 }
             }
             else
@@ -503,6 +525,8 @@ namespace HttpDataServerProject8
                     sect = new SectionIndexes(html, new String[] { "Требования заказчика" }, ci);
                 }
             }
+            */
+            return aUid;
         }
     }
     class Fz223
@@ -592,7 +616,11 @@ namespace HttpDataServerProject8
             String r = s;
             if (!String.IsNullOrWhiteSpace(r))
             {
-                r = r.Replace("<span>", "").Replace("</span>", "");
+                r = new Regex("<span[^>]*>").Replace(r, " ");
+                r = r.Replace("</span>", " ");
+                r = new Regex("<a[^>]*>").Replace(r, " ");
+                r = r.Replace("</a>", " ");
+                r = new Regex("<br[^>]*>").Replace(r, " ");
                 r = r.Replace("&nbsp;", " ").Replace("&laquo;", "«").Replace("&raquo;", "»").Replace("&#034;", "\"").Replace("&#34;", "\"");
                 r = r.Replace("\t", " ").Replace("\n", " ").Replace("\r", " ");
                 while (r.Contains("  ")) r = r.Replace("  ", " ");
