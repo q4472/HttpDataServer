@@ -27,18 +27,22 @@ namespace HttpDataServerProject8
             }
 
             String auctionNumber = rqp["auction_number"] as String;
+            String auctionUrl = rqp["auction_href"] as String;
 
             Guid? auctionUid = null;
             if (!String.IsNullOrWhiteSpace(auctionNumber))
             {
                 auctionUid = GetAuctionUid(auctionNumber);
-
-                if (auctionUid == null || overwrite)
-                {
-                    auctionUid = LoadAndSave(auctionNumber);
-                }
             }
-            else { rsp.Status = "Не задан номер аукциона"; }
+
+            if (auctionUid == null || overwrite)
+            {
+                if (!String.IsNullOrWhiteSpace(auctionUrl) )
+                {
+                    auctionUid = LoadAndSave(auctionNumber, auctionUrl);
+                }
+                else { rsp.Status = "Не задан номер аукциона"; }
+            }
 
             if (auctionUid != null)
             {
@@ -46,7 +50,9 @@ namespace HttpDataServerProject8
                 rsp.Data = new DataSet();
                 rsp.Data.Tables.Add();
                 rsp.Data.Tables[0].Columns.Add(new DataColumn("auction_uid", typeof(Guid)));
-                rsp.Data.Tables[0].Rows.Add(new object[] { auctionUid });
+                rsp.Data.Tables[0].Columns.Add(new DataColumn("auction_number", typeof(Guid)));
+                rsp.Data.Tables[0].Columns.Add(new DataColumn("auction_url", typeof(Guid)));
+                rsp.Data.Tables[0].Rows.Add(new object[] { auctionUid, auctionNumber, auctionUrl });
             }
             else { rsp.Status = "Не удалось найти или загрузить информацию об аукционе."; }
 
@@ -74,14 +80,14 @@ namespace HttpDataServerProject8
             }
             return auctionUid;
         }
-        private static Guid? LoadAndSave(String auctionNumber)
+        private static Guid? LoadAndSave(String auctionNumber, String auctionUrl)
         {
             Guid? auctionUid = null;
             try
             {
-                if (!String.IsNullOrWhiteSpace(auctionNumber) && (auctionNumber.Length == 11 || auctionNumber.Length == 19))
+                //if (!String.IsNullOrWhiteSpace(auctionNumber) && (auctionNumber.Length == 11 || auctionNumber.Length == 19))
                 {
-                    String html = ZakupkiGovRu.GetAuctionInf(auctionNumber);
+                    String html = ZakupkiGovRu.GetAuctionInf(auctionNumber, auctionUrl);
                     if (!String.IsNullOrWhiteSpace(html))
                     {
                         if (auctionNumber.Length == 11) // 223 фз
@@ -95,7 +101,7 @@ namespace HttpDataServerProject8
                     }
                     else { Log.Write(String.Format($"Информация о заявке '{auctionNumber}' не загрузилась.")); }
                 }
-                else { Log.Write(String.Format($"Не указан номер заявки.")); }
+                //else { Log.Write(String.Format($"Не указан номер заявки.")); }
             }
             catch (Exception e) { Log.Write(String.Format(e.Message)); }
             return auctionUid;
@@ -103,30 +109,40 @@ namespace HttpDataServerProject8
     }
     class ZakupkiGovRu
     {
-        public static String GetAuctionInf(String auctionNumber)
+        public static String GetAuctionInf(String auctionNumber, String auctionUrl)
         {
             String html = null;
-            if (!String.IsNullOrWhiteSpace(auctionNumber) && auctionNumber.Length == 19)
+            
+            if (!String.IsNullOrWhiteSpace(auctionUrl))
             {
-                UriBuilder ub = new UriBuilder
-                {
-                    Scheme = "http",
-                    Host = "zakupki.gov.ru",
-                    Path = "/epz/order/notice/ea44/view/common-info.html",
-                    Query = String.Format("regNumber={0}", auctionNumber)
-                };
-                html = Utilities.GetResponse(ub.Uri);
+                Uri uri = new Uri("http://zakupki.gov.ru" + auctionUrl);
+                html = Utilities.GetResponse(uri);
             }
-            if (!String.IsNullOrWhiteSpace(auctionNumber) && auctionNumber.Length == 11)
+            else
+            
             {
-                UriBuilder ub = new UriBuilder
+                if (!String.IsNullOrWhiteSpace(auctionNumber) && auctionNumber.Length == 19)
                 {
-                    Scheme = "http",
-                    Host = "zakupki.gov.ru",
-                    Path = "/223/purchase/public/purchase/info/common-info.html",
-                    Query = String.Format("regNumber={0}", auctionNumber)
-                };
-                html = Utilities.GetResponse(ub.Uri);
+                    UriBuilder ub = new UriBuilder
+                    {
+                        Scheme = "http",
+                        Host = "zakupki.gov.ru",
+                        Path = "/epz/order/notice/ea44/view/common-info.html",
+                        Query = String.Format("regNumber={0}", auctionNumber)
+                    };
+                    html = Utilities.GetResponse(ub.Uri);
+                }
+                if (!String.IsNullOrWhiteSpace(auctionNumber) && auctionNumber.Length == 11)
+                {
+                    UriBuilder ub = new UriBuilder
+                    {
+                        Scheme = "http",
+                        Host = "zakupki.gov.ru",
+                        Path = "/223/purchase/public/purchase/info/common-info.html",
+                        Query = String.Format("regNumber={0}", auctionNumber)
+                    };
+                    html = Utilities.GetResponse(ub.Uri);
+                }
             }
             return html;
         }
