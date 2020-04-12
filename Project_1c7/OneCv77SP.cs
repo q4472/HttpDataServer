@@ -19,6 +19,7 @@ namespace Project_1c7
                 if (V77gc == null) { V77gc = new GlobalContext(V77CnString); }
                 if (V77gc != null && V77gc.ComObject != null)
                 {
+                    DateTime преиодС = DateTime.Now.AddMonths(-2);
                     switch (rqp.Command)
                     {
                         case "Добавить":
@@ -40,16 +41,16 @@ namespace Project_1c7
                             rsp = F1GetStuffTable(rqp);
                             break;
                         case "ПолучитьСписокПриходныхНакладных":
-                            rsp = ПолучитьСписокПриходныхНакладных();
+                            rsp = ПолучитьСписокПриходныхНакладных("Фарм-Сиб", преиодС);
                             break;
                         case "ПолучитьСписокРасходныхНакладных":
-                            rsp = ПолучитьСписокРасходныхНакладных();
+                            rsp = ПолучитьСписокРасходныхНакладных("ФК ГАРЗА", преиодС);
                             break;
                         case "ПолучитьИз1СФармСибРасходнуюНакладную":
-                            rsp = ПолучитьИз1СФармСибРасходнуюНакладную(rqp);
+                            rsp = ПолучитьРасходнуюНакладную(rqp, преиодС);
                             break;
                         case "ДобавитьВ1СФКГарзаПриходнуюНакладную":
-                            rsp = ДобавитьВ1СФКГарзаПриходнуюНакладную(rqp);
+                            rsp = ДобавитьПриходнуюНакладную(rqp);
                             break;
                         case "ПолучитьДоговорПоКоду":
                             rsp = ПолучитьДоговорПоКоду(rqp);
@@ -205,15 +206,18 @@ namespace Project_1c7
             }
             public static ResponsePackage F0Delete(RequestPackage rqp)
             {
+                if (rqp == null) { throw new ArgumentNullException(nameof(rqp)); }
                 ResponsePackage rsp = new ResponsePackage();
-                Int32 code = -1;
-                if (Int32.TryParse(rqp["Код"] as String, out code))
+                Object code = rqp["Код"];
+                if (code != null && !String.IsNullOrWhiteSpace(code.ToString()))
                 {
+
                     var Договора = new Справочник(V77gc.СоздатьОбъект("Справочник.Договора"));
                     if (Договора.НайтиПоКоду(code.ToString()) == 1)
                     {
                         Договора.Удалить(0); // 0 - пометка на удаление
                     }
+                    Договора.Dispose();
                 }
                 else
                 {
@@ -430,7 +434,7 @@ namespace Project_1c7
             rsp.Data.Tables.Add(dt);
             return rsp;
         }
-        private static ResponsePackage ПолучитьСписокПриходныхНакладных()
+        private static ResponsePackage ПолучитьСписокПриходныхНакладных(String клиентНаименование, DateTime периодС)
         {
             ResponsePackage rsp = new ResponsePackage();
             DataTable dt = new DataTable("СписокПриходныхНакладных");
@@ -442,14 +446,14 @@ namespace Project_1c7
             {
                 var ТекстЗапроса = $@"
                     Без итогов;
-                    Период с '{DateTime.Now.AddMonths(-3).ToString("dd.MM.yyyy")}';
+                    Период с '{периодС.ToString("dd.MM.yyyy")}';
                     ОбрабатыватьДокументы Все; 
                     НомерДок = Документ.Приходная.НомерДок;
                     ДатаДок = Документ.Приходная.ДатаДок;
                     КлиентНаименование = Документ.Приходная.Клиент.Наименование;
                     НомерТН = Документ.Приходная.НомерТН;
                     Группировка НомерДок Без групп;
-                    Условие(Найти(КлиентНаименование, ""Фарм-Сиб"") > 0);
+                    Условие(Найти(КлиентНаименование, ""{клиентНаименование}"") > 0);
                 ";
                 if (V77gc.Запрос.Выполнить(ТекстЗапроса) == 1)
                 {
@@ -473,7 +477,7 @@ namespace Project_1c7
             catch (Exception e) { Console.WriteLine(e); }
             return rsp;
         }
-        private static ResponsePackage ПолучитьСписокРасходныхНакладных()
+        private static ResponsePackage ПолучитьСписокРасходныхНакладных(String клиентНаименование, DateTime периодС)
         {
             ResponsePackage rsp = new ResponsePackage();
             DataTable dt = new DataTable("СписокРасходныхНакладных");
@@ -484,12 +488,12 @@ namespace Project_1c7
             {
                 var ТекстЗапроса = $@"
                     Без итогов;
-                    Период с '{DateTime.Now.AddMonths(-3).ToString("dd.MM.yyyy")}';
+                    Период с '{периодС.ToString("dd.MM.yyyy")}';
                     НомерДок = Документ.Расходная.НомерДок;
                     ДатаДок = Документ.Расходная.ДатаДок;
                     КлиентНаименование = Документ.Расходная.Клиент.Наименование;
                     Группировка НомерДок Без групп;
-                    Условие(Найти(КлиентНаименование, ""ФК ГАРЗА"") > 0);
+                    Условие(Найти(КлиентНаименование, ""{клиентНаименование}"") > 0);
                 ";
                 if (V77gc != null && V77gc.Запрос.Выполнить(ТекстЗапроса) == 1)
                 {
@@ -509,7 +513,7 @@ namespace Project_1c7
             rsp.Data.Tables.Add(dt);
             return rsp;
         }
-        private static ResponsePackage ПолучитьИз1СФармСибРасходнуюНакладную(RequestPackage rqp)
+        private static ResponsePackage ПолучитьРасходнуюНакладную(RequestPackage rqp, DateTime периодС)
         {
             ResponsePackage rsp = new ResponsePackage
             {
@@ -525,7 +529,7 @@ namespace Project_1c7
 
                 V77Расходная v77Расходная = null;
 
-                var Расходная = НайтиРасходнуюНакладнуюПоНомеруЗаПоследние3месяца(НомерНакладной);
+                var Расходная = НайтиРасходнуюНакладную(НомерНакладной, периодС);
                 if (Расходная != null)
                 {
                     Документ СчетФактура = null;
@@ -606,7 +610,7 @@ namespace Project_1c7
             else { rsp.Status += "\nНе задан номер расходной накладной."; }
             return rsp;
         }
-        private static ResponsePackage ДобавитьВ1СФКГарзаПриходнуюНакладную(RequestPackage rqp)
+        private static ResponsePackage ДобавитьПриходнуюНакладную(RequestPackage rqp)
         {
             ResponsePackage rsp = new ResponsePackage
             {
@@ -904,17 +908,17 @@ namespace Project_1c7
             }
             return rsp;
         }
-        private static Документ НайтиРасходнуюНакладнуюПоНомеруЗаПоследние3месяца(String Номер)
+        private static Документ НайтиРасходнуюНакладную(String Номер, DateTime ПериодС)
         {
             Документ Расходная = null;
-            String ТекстЗапроса = String.Format(@"
+            String ТекстЗапроса = $@"
                         Без итогов;
-                        Период с '{0}';
+                        Период с '{ПериодС.ToString("dd.MM.yyyy")}';
                         ДокументРасходная = Документ.Расходная.ТекущийДокумент;
                         НомерДок = Документ.Расходная.НомерДок;
-                        Условие(НомерДок = ""{1}"");
+                        Условие(НомерДок = ""{Номер}"");
                         Группировка ДокументРасходная без групп;
-                        ", DateTime.Now.AddMonths(-3).ToString("dd.MM.yyyy"), Номер);
+                        ";
             try
             {
                 if (V77gc.Запрос.Выполнить(ТекстЗапроса) == 1 && V77gc.Запрос.Группировка() == 1)
