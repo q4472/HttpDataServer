@@ -523,7 +523,7 @@ namespace Project_1c7
         {
             ResponsePackage rsp = new ResponsePackage
             {
-                Status = "HttpDataServer.HttpDataServerProject04_1c7.OneCv77SP.HttpDataServerProject4.OcStoredProcedure.ПолучитьИз1СФармСибРасходнуюНакладную()"
+                Status = "HttpDataServer.HttpDataServerProject04_1c7.OneCv77SP.HttpDataServerProject4.OcStoredProcedure.ПолучитьРасходнуюНакладную()"
             };
 
             String fsN = rqp["fsN"] as String;
@@ -620,11 +620,13 @@ namespace Project_1c7
         {
             ResponsePackage rsp = new ResponsePackage
             {
-                Status = "HttpDataServer.HttpDataServerProject14_1v7.OneCv77SP.HttpDataServerProject14.OcStoredProcedure.ДобавитьВ1СФКГарзаПриходнуюНакладную()"
+                Status = "HttpDataServer.HttpDataServerProject14_1v7.OneCv77SP.HttpDataServerProject14.OcStoredProcedure.ДобавитьПриходнуюНакладную()"
             };
             if (rqp != null)
             {
                 String json = rqp["РасходнаяНакладная"] as String;
+                String firm = rqp["Фирма"] as String;
+                String client = rqp["Клиент"] as String;
                 Double discount = 0;
                 Object temp = rqp["СкидкаПоставщикаВПроцентах"];
                 if (temp != null && temp.GetType() == typeof(Double)) discount = (Double)temp;
@@ -664,7 +666,7 @@ namespace Project_1c7
                             V77Object Фирма = null;
                             {
                                 var Фирмы = new Справочник(V77gc.СоздатьОбъект("Справочник.Фирмы"));
-                                if (Фирмы.НайтиПоНаименованию("ООО \"ФК ГАРЗА\"", 0, 1) == 1) Фирма = Фирмы.ТекущийЭлемент();
+                                if (Фирмы.НайтиПоНаименованию($"ООО \"{firm}\"", 0, 1) == 1) Фирма = Фирмы.ТекущийЭлемент();
                                 Фирмы.Dispose(); Фирмы = null;
                                 if (Фирма != null)
                                 {
@@ -686,7 +688,7 @@ namespace Project_1c7
                             V77Object Клиент = null;
                             {
                                 var Клиенты = new Справочник(V77gc.СоздатьОбъект("Справочник.Клиенты"));
-                                if (Клиенты.НайтиПоНаименованию("ООО \"Фарм-Сиб\"", 0, 1) == 1) Клиент = Клиенты.ТекущийЭлемент();
+                                if (Клиенты.НайтиПоНаименованию($"ООО \"{client}\"", 0, 1) == 1) Клиент = Клиенты.ТекущийЭлемент();
                                 Клиенты.Dispose(); Клиенты = null;
                                 if (Клиент != null)
                                 {
