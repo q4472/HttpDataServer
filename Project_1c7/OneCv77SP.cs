@@ -446,7 +446,7 @@ namespace Project_1c7
             try
             {
                 DateTime периодС = (DateTime)rqp["период_с"];
-                String клиентНаименование = ((String)rqp["клиент"]).Replace("\"", "\" + chr(34) + \"");
+                String клиентНаименование = ((String)rqp["клиент"]).Replace("\"", " ");
                 var ТекстЗапроса = $@"
                     Без итогов;
                     Период с '{периодС.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)}';
@@ -456,7 +456,7 @@ namespace Project_1c7
                     КлиентНаименование = Документ.Приходная.Клиент.Наименование;
                     НомерТН = Документ.Приходная.НомерТН;
                     Группировка НомерДок Без групп;
-                    Условие(Найти(КлиентНаименование, ""{клиентНаименование}"") > 0);
+                    Условие(Найти(Врег(СтрЗаменить(КлиентНаименование, Chr(34), Chr(32))), Врег(""{клиентНаименование}"")) > 0);
                 ";
                 if (V77gc.Запрос.Выполнить(ТекстЗапроса) == 1)
                 {
@@ -491,7 +491,7 @@ namespace Project_1c7
             try
             {
                 DateTime периодС = (DateTime)rqp["период_с"];
-                String клиентНаименование = ((String)rqp["клиент"]).Replace("\"", "\" + chr(34) + \"");
+                String клиентНаименование = ((String)rqp["клиент"]).Replace("\"", " ");
                 var ТекстЗапроса = $@"
                     Без итогов;
                     Период с '{периодС.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)}';
@@ -499,7 +499,7 @@ namespace Project_1c7
                     ДатаДок = Документ.Расходная.ДатаДок;
                     КлиентНаименование = Документ.Расходная.Клиент.Наименование;
                     Группировка НомерДок Без групп;
-                    Условие(Найти(КлиентНаименование, ""{клиентНаименование}"") > 0);
+                    Условие(Найти(Врег(СтрЗаменить(КлиентНаименование, Chr(34), Chr(32))), Врег(""{клиентНаименование}"")) > 0);
                 ";
                 if (V77gc != null && V77gc.Запрос.Выполнить(ТекстЗапроса) == 1)
                 {
@@ -526,16 +526,17 @@ namespace Project_1c7
                 Status = "HttpDataServer.HttpDataServerProject04_1c7.OneCv77SP.HttpDataServerProject4.OcStoredProcedure.ПолучитьРасходнуюНакладную()"
             };
 
-            String fsN = rqp["fsN"] as String;
-            if (!String.IsNullOrWhiteSpace(fsN))
+            String num = rqp["num"] as String;
+            DateTime периодС = (DateTime)rqp["период_с"];
+            if (!String.IsNullOrWhiteSpace(num))
             {
-                rsp.Status += "\n" + fsN;
+                rsp.Status += "\n" + num;
 
-                String НомерНакладной = fsN.Replace("\"", "");
+                String НомерНакладной = num.Replace("\"", "");
 
                 V77Расходная v77Расходная = null;
 
-                var Расходная = НайтиРасходнуюНакладную(НомерНакладной);
+                var Расходная = НайтиРасходнуюНакладную(периодС, НомерНакладной);
                 if (Расходная != null)
                 {
                     Документ СчетФактура = null;
@@ -916,11 +917,12 @@ namespace Project_1c7
             }
             return rsp;
         }
-        private static Документ НайтиРасходнуюНакладную(String Номер)
+        private static Документ НайтиРасходнуюНакладную(DateTime периодС, String Номер)
         {
             Документ Расходная = null;
             String ТекстЗапроса = $@"
                         Без итогов;
+                        Период с '{периодС.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)}';
                         ДокументРасходная = Документ.Расходная.ТекущийДокумент;
                         НомерДок = Документ.Расходная.НомерДок;
                         Условие(НомерДок = ""{Номер}"");
