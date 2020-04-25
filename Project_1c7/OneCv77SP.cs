@@ -446,7 +446,7 @@ namespace Project_1c7
             try
             {
                 DateTime периодС = (DateTime)rqp["период_с"];
-                String клиентНаименование = (String)rqp["клиент"];
+                String клиентНаименование = ((String)rqp["клиент"]).Replace("\"", "\" + chr(34) + \"");
                 var ТекстЗапроса = $@"
                     Без итогов;
                     Период с '{периодС.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)}';
@@ -491,7 +491,7 @@ namespace Project_1c7
             try
             {
                 DateTime периодС = (DateTime)rqp["период_с"];
-                String клиентНаименование = (String)rqp["клиент"];
+                String клиентНаименование = ((String)rqp["клиент"]).Replace("\"", "\" + chr(34) + \"");
                 var ТекстЗапроса = $@"
                     Без итогов;
                     Период с '{периодС.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)}';
@@ -666,7 +666,7 @@ namespace Project_1c7
                             V77Object Фирма = null;
                             {
                                 var Фирмы = new Справочник(V77gc.СоздатьОбъект("Справочник.Фирмы"));
-                                if (Фирмы.НайтиПоНаименованию($"ООО \"{firm}\"", 0, 1) == 1) Фирма = Фирмы.ТекущийЭлемент();
+                                if (Фирмы.НайтиПоНаименованию(firm, 0, 1) == 1) Фирма = Фирмы.ТекущийЭлемент();
                                 Фирмы.Dispose(); Фирмы = null;
                                 if (Фирма != null)
                                 {
@@ -688,7 +688,7 @@ namespace Project_1c7
                             V77Object Клиент = null;
                             {
                                 var Клиенты = new Справочник(V77gc.СоздатьОбъект("Справочник.Клиенты"));
-                                if (Клиенты.НайтиПоНаименованию($"ООО \"{client}\"", 0, 1) == 1) Клиент = Клиенты.ТекущийЭлемент();
+                                if (Клиенты.НайтиПоНаименованию(client, 0, 1) == 1) Клиент = Клиенты.ТекущийЭлемент();
                                 Клиенты.Dispose(); Клиенты = null;
                                 if (Клиент != null)
                                 {
