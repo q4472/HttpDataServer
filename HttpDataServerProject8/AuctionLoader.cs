@@ -296,7 +296,7 @@ namespace HttpDataServerProject8
                     if (!String.IsNullOrWhiteSpace(v))
                     {
                         hrefs.Add(v);
-                        sIndex = sIs.Index3;
+                        sIndex = sIs.TEIndex;
                         continue;
                     }
                     break;
@@ -322,33 +322,33 @@ namespace HttpDataServerProject8
             Guid aUid = new Guid();
 
             // берём основные блоки
-            Int32 c0 = new SectionIndexes(html, new String[] { "cardWrapper" }).Index1;
+            Int32 c0 = new SectionIndexes(html, new String[] { "cardWrapper" }).HEIndex;
             // заявка
-            Int32 h0 = new SectionIndexes(html, new String[] { "cardMainInfo" }, c0).Index1;
+            Int32 h0 = new SectionIndexes(html, new String[] { "cardMainInfo" }, c0).HEIndex;
             // общая_информация_о_закупке
-            Int32 t0 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Общая информация о закупке", "</span>" }, c0).Index1;
+            Int32 t0 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Общая информация о закупке", "</span>" }, c0).HEIndex;
             // информация_об_организации_осуществляющей_определение_поставщика
-            Int32 t1 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Контактная информация", "</span>" }, c0).Index1;
+            Int32 t1 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Контактная информация", "</span>" }, c0).HEIndex;
             // информация_о_процедуре_закупки
-            Int32 t2 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Информация о процедуре электронного аукциона", "</span>" }, c0).Index1;
+            Int32 t2 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Информация о процедуре электронного аукциона", "</span>" }, c0).HEIndex;
             // начальная_максимальная_цена_контракта
-            Int32 t3 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Начальная (максимальная) цена контракта", "</span>" }, c0).Index1;
+            Int32 t3 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Начальная (максимальная) цена контракта", "</span>" }, c0).HEIndex;
             // информация_об_объекте_закупки
-            Int32 t4 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Информация об объекте закупки", "</span>" }, c0).Index1;
+            Int32 t4 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Информация об объекте закупки", "</span>" }, c0).HEIndex;
             // преимущества_требования_к_участникам
-            Int32 t5 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Преимущества, требования к участникам", "</span>" }, c0).Index1;
+            Int32 t5 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Преимущества, требования к участникам", "</span>" }, c0).HEIndex;
             //
-            Int32 t6 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Документация об электронном аукционе", "</span>" }, c0).Index1;
+            Int32 t6 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Документация об электронном аукционе", "</span>" }, c0).HEIndex;
             //
-            Int32 t7 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Обеспечение заявки", "</span>" }, c0).Index1;
+            Int32 t7 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Обеспечение заявки", "</span>" }, c0).HEIndex;
             //
-            Int32 t8 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Условия контракта", "</span>" }, c0).Index1;
+            Int32 t8 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Условия контракта", "</span>" }, c0).HEIndex;
             //
-            Int32 t9 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Обеспечение исполнения контракта", "</span>" }, c0).Index1;
+            Int32 t9 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Обеспечение исполнения контракта", "</span>" }, c0).HEIndex;
             //
-            Int32 t10 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Обеспечение гарантийных обязательств", "</span>" }, c0).Index1;
+            Int32 t10 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Обеспечение гарантийных обязательств", "</span>" }, c0).HEIndex;
             //
-            Int32 t11 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Информация о банковском и (или) казначейском сопровождении контракта", "</span>" }, c0).Index1;
+            Int32 t11 = new SectionIndexes(html, new String[] { "blockInfo__title", "span", "Информация о банковском и (или) казначейском сопровождении контракта", "</span>" }, c0).HEIndex;
 
             // записываем на SQL сервер в базу Auctions общую информацию о заявке
 
@@ -684,56 +684,68 @@ namespace HttpDataServerProject8
     class SectionIndexes
     {
         private String src;
-        private Int32 i0;
-        private Int32 i1;
-        private Int32 i2;
-        private Int32 i3;
+        private Int32 hbi; // индекс первого символа заголовка
+        private Int32 hei; // индекс последнего символа заголовка
+        private Int32 tbi; // индекс первого символа хвоста
+        private Int32 tei; // индекс последнего символа хвоста
 
-        public Int32 Index0
+        /// <summary>
+        /// индекс первого символа заголовка
+        /// </summary>
+        public Int32 HBIndex
         {
-            get { return i0; }
+            get => hbi;
             set
             {
                 if (value < 0 || value > src.Length) throw new ArgumentOutOfRangeException();
-                else { i0 = i1 = i2 = i3 = value; }
+                else { hbi = hei = tbi = tei = value; }
             }
         }
-        public Int32 Index1
+        /// <summary>
+        /// индекс последнего символа заголовка
+        /// </summary>
+        public Int32 HEIndex
         {
-            get { return i1; }
+            get => hei;
             set
             {
-                if (value < i0 || value > src.Length) throw new ArgumentOutOfRangeException();
-                else { i1 = i2 = i3 = value; }
+                if (value < hbi || value > src.Length) throw new ArgumentOutOfRangeException();
+                else { hei = tbi = tei = value; }
             }
         }
-        public Int32 Index2
+        /// <summary>
+        /// индекс первого символа хвоста
+        /// </summary>
+        public Int32 TBIndex
         {
-            get { return i2; }
+            get => tbi;
             set
             {
-                if (value < i1 || value > src.Length) throw new ArgumentOutOfRangeException();
-                else { i2 = i3 = value; }
+                if (value < hei || value > src.Length) throw new ArgumentOutOfRangeException();
+                else { tbi = tei = value; }
             }
         }
-        public Int32 Index3
+        /// <summary>
+        /// индекс последнего символа хвоста
+        /// </summary>
+        public Int32 TEIndex
         {
-            get { return i3; }
+            get => tei;
             set
             {
-                if (value < i2 || value > src.Length) throw new ArgumentOutOfRangeException();
-                else i3 = value;
+                if (value < tbi || value > src.Length) throw new ArgumentOutOfRangeException();
+                else tei = value;
             }
         }
-        public Boolean HeadIsFound { get => Index1 > Index0; }
-        public Boolean TailIsFound { get => Index3 > Index2; }
-        public String InnerText { get => (HeadIsFound && TailIsFound) ? src.Substring(Index1, Index2 - Index1) : null; }
+        public Boolean HeadIsFound { get => HEIndex > HBIndex; }
+        public Boolean TailIsFound { get => TEIndex > TBIndex; }
+        public String InnerText { get => (HeadIsFound && TailIsFound) ? src.Substring(HEIndex, TBIndex - HEIndex) : null; }
         public SectionIndexes(String src, String[] hf = null, Int32 startIndex = 0, String[] tf = null)
         {
             if (src == null || startIndex < 0) throw new ArgumentException();
             this.src = src;
 
-            Index0 = startIndex;
+            HBIndex = startIndex;
             if (hf != null && hf.Length > 0)
             {
                 bool hfIsFound = false;
@@ -741,16 +753,16 @@ namespace HttpDataServerProject8
                 {
                     if (!String.IsNullOrEmpty(value))
                     {
-                        Int32 index = src.IndexOf(value, Index1);
-                        if (index >= Index1)
+                        Int32 index = src.IndexOf(value, HEIndex);
+                        if (index >= HEIndex)
                         {
-                            if (!hfIsFound) Index0 = index;
-                            Index1 = index + value.Length;
+                            if (!hfIsFound) HBIndex = index;
+                            HEIndex = index + value.Length;
                             hfIsFound = true;
                         }
                         else
                         {
-                            Index1 = Index0;
+                            HEIndex = HBIndex;
                             hfIsFound = false;
                             break;
                         }
@@ -765,16 +777,16 @@ namespace HttpDataServerProject8
                 {
                     if (!String.IsNullOrEmpty(value))
                     {
-                        Int32 index = src.IndexOf(value, Index3);
-                        if (index >= Index3)
+                        Int32 index = src.IndexOf(value, TEIndex);
+                        if (index >= TEIndex)
                         {
-                            if (!efIsFound) Index2 = index;
-                            Index3 = index + value.Length;
+                            if (!efIsFound) TBIndex = index;
+                            TEIndex = index + value.Length;
                             efIsFound = true;
                         }
                         else
                         {
-                            Index3 = Index2;
+                            TEIndex = TBIndex;
                             efIsFound = false;
                             break;
                         }
