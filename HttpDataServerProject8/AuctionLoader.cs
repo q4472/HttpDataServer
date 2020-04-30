@@ -685,9 +685,9 @@ namespace HttpDataServerProject8
     {
         private String src;
         private Int32 hbi; // индекс первого символа заголовка
-        private Int32 hei; // индекс последнего символа заголовка
+        private Int32 hei; // индекс первого символа после заголовка
         private Int32 tbi; // индекс первого символа хвоста
-        private Int32 tei; // индекс последнего символа хвоста
+        private Int32 tei; // индекс первого символа после хвоста
 
         /// <summary>
         /// индекс первого символа заголовка
@@ -702,7 +702,7 @@ namespace HttpDataServerProject8
             }
         }
         /// <summary>
-        /// индекс последнего символа заголовка
+        /// индекс первого символа после заголовка
         /// </summary>
         public Int32 HEIndex
         {
@@ -726,7 +726,7 @@ namespace HttpDataServerProject8
             }
         }
         /// <summary>
-        /// индекс последнего символа хвоста
+        /// индекс первого символа после хвоста
         /// </summary>
         public Int32 TEIndex
         {
@@ -739,6 +739,9 @@ namespace HttpDataServerProject8
         }
         public Boolean HeadIsFound { get => HEIndex > HBIndex; }
         public Boolean TailIsFound { get => TEIndex > TBIndex; }
+        /// <summary>
+        /// текст начиная с первого символа после заголовка до первого символа хвоста не включительно
+        /// </summary>
         public String InnerText { get => (HeadIsFound && TailIsFound) ? src.Substring(HEIndex, TBIndex - HEIndex) : null; }
         public SectionIndexes(String src, String[] hf = null, Int32 startIndex = 0, String[] tf = null)
         {
@@ -748,7 +751,7 @@ namespace HttpDataServerProject8
             HBIndex = startIndex;
             if (hf != null && hf.Length > 0)
             {
-                bool hfIsFound = false;
+                bool hIsFound = false;
                 foreach (String value in hf)
                 {
                     if (!String.IsNullOrEmpty(value))
@@ -756,14 +759,14 @@ namespace HttpDataServerProject8
                         Int32 index = src.IndexOf(value, HEIndex);
                         if (index >= HEIndex)
                         {
-                            if (!hfIsFound) HBIndex = index;
+                            if (!hIsFound) HBIndex = index;
                             HEIndex = index + value.Length;
-                            hfIsFound = true;
+                            hIsFound = true;
                         }
                         else
                         {
                             HEIndex = HBIndex;
-                            hfIsFound = false;
+                            hIsFound = false;
                             break;
                         }
                     }
@@ -772,7 +775,7 @@ namespace HttpDataServerProject8
 
             if (tf != null && tf.Length > 0)
             {
-                bool efIsFound = false;
+                bool tIsFound = false;
                 foreach (String value in tf)
                 {
                     if (!String.IsNullOrEmpty(value))
@@ -780,14 +783,14 @@ namespace HttpDataServerProject8
                         Int32 index = src.IndexOf(value, TEIndex);
                         if (index >= TEIndex)
                         {
-                            if (!efIsFound) TBIndex = index;
+                            if (!tIsFound) TBIndex = index;
                             TEIndex = index + value.Length;
-                            efIsFound = true;
+                            tIsFound = true;
                         }
                         else
                         {
                             TEIndex = TBIndex;
-                            efIsFound = false;
+                            tIsFound = false;
                             break;
                         }
                     }
