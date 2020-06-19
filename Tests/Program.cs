@@ -179,7 +179,7 @@ namespace Tests
                         if (ВидНоменклатурыТовар.Пустая()) { throw new Exception("В справочнике 'ВидыНоменклатуры' не найден элемент 'Товар'."); }
                         Console.WriteLine("В справочнике 'ВидыНоменклатуры' найден элемент '{0}'", ВидНоменклатурыТовар.Наименование);
 
-                        
+
                         var Перечисления = globalContext.Перечисления;
                         /*
                         var ПеречислениеТипыНоменклатуры = Перечисления.ТипыНоменклатуры;
@@ -368,7 +368,7 @@ namespace Tests
         }
         private static void TestLinks()
         {
-            // 1. читать все ссылки на файлы РУ из [Pharm-Sib].[dbo].[files]
+            // 1. читать все ссылки на файлы РУ из [Pharm-Sib].[dbo].[рег_уд__файлы_v3]
             DataTable links = new DataTable();
 
             String cnString = "Data Source=192.168.135.14;Integrated Security=True";
@@ -381,15 +381,22 @@ namespace Tests
             cmd.Parameters.AddWithValue("max_rows_count", 0);
             (new SqlDataAdapter(cmd)).Fill(links);
 
+            // новая команда для удаления неверных ссылок
+            cmd.CommandText = "[Pharm-Sib].[dbo].[рег_уд__файлы__del]";
+            cmd.Parameters.RemoveAt("max_rows_count");
+            cmd.Parameters.AddWithValue("path", null);
+
             // 2. каждую ссылку проверить
             int dCount = 0;
             int fCount = 0;
             int errCount = 0;
             foreach (DataRow row in links.Rows)
             {
+                if ((dCount + fCount + errCount) % 100 == 0) { Console.Write("*"); }
+
                 String path = row["path"] as String;
-                path = @"\\SHD\reg_doc" + path.Replace(@"/", @"\");
-                DirectoryInfo di = new DirectoryInfo(path);
+                String absPath = @"\\SHD\reg_doc" + path.Replace(@"/", @"\");
+                DirectoryInfo di = new DirectoryInfo(absPath);
                 if (di.Exists)
                 {
                     // это каталог - всё хорошо - переходим на следующую ссылку
@@ -397,7 +404,7 @@ namespace Tests
                     continue;
                 }
                 // это не каталог - может быть это файл
-                FileInfo fi = new FileInfo(path);
+                FileInfo fi = new FileInfo(absPath);
                 if (fi.Exists)
                 {
                     // это файл - всё хорошо - переходим на следующую ссылку
@@ -408,9 +415,7 @@ namespace Tests
                 errCount++;
                 Console.WriteLine($"{errCount} {path}");
 
-                /*
-                cmd.CommandText =
-                    @"update [dbo].[files] set [deleted] = 1 where [file_id] = N'" + file_id + "';";
+                cmd.Parameters["path"].Value = path;
                 try
                 {
                     cmd.Connection.Open();
@@ -418,9 +423,8 @@ namespace Tests
                 }
                 catch (Exception e) { Console.WriteLine(e.ToString()); }
                 finally { cmd.Connection.Close(); }
-                */
-
             }
+            Console.WriteLine();
             Console.WriteLine($"всего ссылок: {links.Rows.Count}, каталогов: {dCount}, файлов: {fCount}, ошибок: {errCount}");
         }
         private static void TestHttpDataServer()
@@ -445,14 +449,14 @@ namespace Tests
             else
             {
                 Console.WriteLine(String.Format("rsp.Status: '{0}'\n", rsp.Status));
-                if(rsp.Data != null)
+                if (rsp.Data != null)
                 {
                     Console.WriteLine(String.Format("Получен набор данных."));
                     DataSet ds = rsp.Data;
                     if (ds.Tables.Count > 0)
                     {
                         Console.WriteLine($"В нём таблиц: {ds.Tables.Count}.");
-                        foreach(DataTable dt in ds.Tables)
+                        foreach (DataTable dt in ds.Tables)
                         {
                             Console.WriteLine($"Таблица: '{dt.TableName}'");
                         }
