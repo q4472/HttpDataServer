@@ -371,17 +371,14 @@ namespace Tests
             // 1. читать все ссылки на файлы РУ из [Pharm-Sib].[dbo].[files]
             DataTable links = new DataTable();
 
-            String cnString = String.Format("Data Source={0};Initial Catalog=Pharm-Sib;Integrated Security=True", "192.168.135.14");
+            String cnString = "Data Source=192.168.135.14;Integrated Security=True";
             SqlCommand cmd = new SqlCommand
             {
                 Connection = new SqlConnection(cnString),
-                CommandType = CommandType.Text,
-                CommandText =
-                @"SELECT f.[file_id], p.[value]
-                    FROM [dbo].[files] as f
-                    left join [dbo].[nvps] as p on p.[id] = f.[nvp_id]
-                    where p.[name] = N'ссылка' and p.[value] like N'{docs_rd}%';"
+                CommandType = CommandType.StoredProcedure,
+                CommandText = "[Pharm-Sib].[dbo].[рег_уд__файлы__get]"
             };
+            cmd.Parameters.AddWithValue("max_rows_count", 0);
             (new SqlDataAdapter(cmd)).Fill(links);
 
             // 2. каждую ссылку проверить
@@ -390,12 +387,9 @@ namespace Tests
             int errCount = 0;
             foreach (DataRow row in links.Rows)
             {
-                String file_id = row["file_id"] as String;
-                String link = row["value"] as String;
-                link = link.Replace(@"/", @"\");
-                link = link.Replace(@"{docs_rd}", @"\\SHD\reg_doc");
-                //String path = Path.Combine(link);
-                DirectoryInfo di = new DirectoryInfo(link);
+                String path = row["path"] as String;
+                path = @"\\SHD\reg_doc" + path.Replace(@"/", @"\");
+                DirectoryInfo di = new DirectoryInfo(path);
                 if (di.Exists)
                 {
                     // это каталог - всё хорошо - переходим на следующую ссылку
@@ -403,7 +397,7 @@ namespace Tests
                     continue;
                 }
                 // это не каталог - может быть это файл
-                FileInfo fi = new FileInfo(link);
+                FileInfo fi = new FileInfo(path);
                 if (fi.Exists)
                 {
                     // это файл - всё хорошо - переходим на следующую ссылку
@@ -412,8 +406,9 @@ namespace Tests
                 }
                 // это не каталог и не файл - сообщаем об ошибке
                 errCount++;
-                Console.WriteLine("{0} {1} {2}", errCount, file_id, link);
+                Console.WriteLine($"{errCount} {path}");
 
+                /*
                 cmd.CommandText =
                     @"update [dbo].[files] set [deleted] = 1 where [file_id] = N'" + file_id + "';";
                 try
@@ -423,9 +418,10 @@ namespace Tests
                 }
                 catch (Exception e) { Console.WriteLine(e.ToString()); }
                 finally { cmd.Connection.Close(); }
+                */
 
             }
-            Console.WriteLine("всего ссылок: {0}, каталогов: {1}, файлов: {2}, ошибок: {3}", links.Rows.Count, dCount, fCount, errCount);
+            Console.WriteLine($"всего ссылок: {links.Rows.Count}, каталогов: {dCount}, файлов: {fCount}, ошибок: {errCount}");
         }
         private static void TestHttpDataServer()
         {
